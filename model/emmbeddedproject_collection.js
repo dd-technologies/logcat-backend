@@ -1,4 +1,5 @@
-const mongoose = require('mongoose');
+
+    const mongoose = require('mongoose');
     const device = require('./device')
     const logs = require('./logs')
     
@@ -34,4 +35,3 @@ const mongoose = require('mongoose');
         const emmbeddedproject_collection = mongoose.model('emmbeddedproject_collection', emmbeddedproject_collectionSchema)
         
         module.exports = emmbeddedproject_collection
-

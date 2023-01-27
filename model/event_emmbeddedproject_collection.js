@@ -11,7 +11,7 @@
             }
         }
         
-        const alert_emmbeddedproject_collectionSchema = new mongoose.Schema(
+        const event_emmbeddedproject_collectionSchema = new mongoose.Schema(
             {
               did:  {
                 type: String,
@@ -45,9 +45,9 @@
             schemaOptions
         )
 
-        alert_emmbeddedproject_collectionSchema.index({'type': 1})
+        event_emmbeddedproject_collectionSchema.index({'type': 1})
                 
-        const alert_emmbeddedproject_collection = mongoose.model('alert_emmbeddedproject_collection', alert_emmbeddedproject_collectionSchema)
+        const event_emmbeddedproject_collection = mongoose.model('event_emmbeddedproject_collection', event_emmbeddedproject_collectionSchema)
         
-        module.exports = alert_emmbeddedproject_collection
+        module.exports = event_emmbeddedproject_collection
         

@@ -450,116 +450,116 @@ const createLogsV2 = async (req, res) => {
  * desc     Alert
  * api      POST @/api/logger/logs/alerts/:projectCode
  */
-const createAlerts = async (req, res, next) => {
-  try {
-    const { project_code } = req.params;
-    // check project exist or not
-    const findProjectWithCode = await Projects.findOne({ code: project_code });
+// const createAlerts = async (req, res, next) => {
+//   try {
+//     const { project_code } = req.params;
+//     // check project exist or not
+//     const findProjectWithCode = await Projects.findOne({ code: project_code });
 
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        status: 0,
-        data: {
-          err: {
-            generatedTime: new Date(),
-            errMsg: errors
-              .array()
-              .map((err) => {
-                return `${err.msg}: ${err.param}`;
-              })
-              .join(' | '),
-            msg: 'Invalid data entered.',
-            type: 'ValidationError',
-          },
-        },
-      });
-    }
+//     const errors = validationResult(req);
+//     if (!errors.isEmpty()) {
+//       return res.status(400).json({
+//         status: 0,
+//         data: {
+//           err: {
+//             generatedTime: new Date(),
+//             errMsg: errors
+//               .array()
+//               .map((err) => {
+//                 return `${err.msg}: ${err.param}`;
+//               })
+//               .join(' | '),
+//             msg: 'Invalid data entered.',
+//             type: 'ValidationError',
+//           },
+//         },
+//       });
+//     }
 
-    if (!findProjectWithCode) {
-      return res.status(404).json({
-        status: 0,
-        data: {
-          err: {
-            generatedTime: new Date(),
-            errMsg: 'Project does not exist',
-            msg: 'Project does not exist',
-            type: 'MongoDb Error',
-          },
-        },
-      });
-    }
-    const collectionName = findProjectWithCode.alert_collection_name;
-    const modelReference = require(`../model/${collectionName}`);
+//     if (!findProjectWithCode) {
+//       return res.status(404).json({
+//         status: 0,
+//         data: {
+//           err: {
+//             generatedTime: new Date(),
+//             errMsg: 'Project does not exist',
+//             msg: 'Project does not exist',
+//             type: 'MongoDb Error',
+//           },
+//         },
+//       });
+//     }
+//     const collectionName = findProjectWithCode.alert_collection_name;
+//     const modelReference = require(`../model/${collectionName}`);
 
-    const { did, type, ack } = req.body;
-    // console.log('type', type);
+//     const { did, type, ack } = req.body;
+//     // console.log('type', type);
 
-    let arrayOfObjects = [];
-    for (let i = 0; i < ack.length; i++) {
-      arrayOfObjects.push(ack[i]);
-    }
+//     let arrayOfObjects = [];
+//     for (let i = 0; i < ack.length; i++) {
+//       arrayOfObjects.push(ack[i]);
+//     }
 
-    let dbSavePromise = ack.map(async (ac) => {
-      const putDataIntoLoggerDb = await new modelReference({
-        did: did,
-        ack: {
-          msg: ac.msg,
-          code: ac.code,
-          date: ac.timestamp,
-        },
-        type: type,
-      });
+//     let dbSavePromise = ack.map(async (ac) => {
+//       const putDataIntoLoggerDb = await new modelReference({
+//         did: did,
+//         ack: {
+//           msg: ac.msg,
+//           code: ac.code,
+//           date: ac.timestamp,
+//         },
+//         type: type,
+//       });
 
-      return putDataIntoLoggerDb.save(putDataIntoLoggerDb);
-    });
+//       return putDataIntoLoggerDb.save(putDataIntoLoggerDb);
+//     });
 
-    let alerts = await Promise.allSettled(dbSavePromise);
+//     let alerts = await Promise.allSettled(dbSavePromise);
 
-    var alertsErrArr = [];
-    var alertsErrMsgArr = [];
+//     var alertsErrArr = [];
+//     var alertsErrMsgArr = [];
 
-    alerts.map((alert) => {
-      alertsErrArr.push(alert.status);
-      if (alert.status === 'rejected') {
-        alertsErrMsgArr.push(alert.reason.message);
-      }
-    });
+//     alerts.map((alert) => {
+//       alertsErrArr.push(alert.status);
+//       if (alert.status === 'rejected') {
+//         alertsErrMsgArr.push(alert.reason.message);
+//       }
+//     });
 
-    if (!alertsErrArr.includes('rejected')) {
-      return res.status(201).json({
-        status: 1,
-        data: { alertCount: alerts.length },
-        message: 'Successful',
-      });
-    } else {
-      res.status(400).json({
-        status: alertsErrArr.length === alerts.length ? -1 : 0,
-        data: {
-          err: {
-            generatedTime: new Date(),
-            errMsg: alertsErrMsgArr.join(' | '),
-            msg: `Error saving ${alertsErrMsgArr.length} out of ${alerts.length} alert(s)`,
-            type: 'ValidationError',
-          },
-        },
-      });
-    }
-  } catch (err) {
-    return res.status(500).json({
-      status: -1,
-      data: {
-        err: {
-          generatedTime: new Date(),
-          errMsg: err.stack,
-          msg: err.message,
-          type: err.name,
-        },
-      },
-    });
-  }
-};
-const createEvents= async(req,res)=>{
+//     if (!alertsErrArr.includes('rejected')) {
+//       return res.status(201).json({
+//         status: 1,
+//         data: { alertCount: alerts.length },
+//         message: 'Successful',
+//       });
+//     } else {
+//       res.status(400).json({
+//         status: alertsErrArr.length === alerts.length ? -1 : 0,
+//         data: {
+//           err: {
+//             generatedTime: new Date(),
+//             errMsg: alertsErrMsgArr.join(' | '),
+//             msg: `Error saving ${alertsErrMsgArr.length} out of ${alerts.length} alert(s)`,
+//             type: 'ValidationError',
+//           },
+//         },
+//       });
+//     }
+//   } catch (err) {
+//     return res.status(500).json({
+//       status: -1,
+//       data: {
+//         err: {
+//           generatedTime: new Date(),
+//           errMsg: err.stack,
+//           msg: err.message,
+//           type: err.name,
+//         },
+//       },
+//     });
+//   }
+// };
+const createEvents= async(req,res,next)=>{
   try{
 
     const{project_code}=req.params;
@@ -599,22 +599,22 @@ const createEvents= async(req,res)=>{
     }
 
     
-    if (!req.query.projectType) {
-      return res.status(400).json({
-        status: 0,
-        data: {
-          err: {
-            generatedTime: new Date(),
-            errMsg: 'Project type is required',
-            msg: 'Project type is required',
-            type: 'Client Error',
-          },
-        },
-      });
-    }
+    // if (!req.query.projectType) {
+    //   return res.status(400).json({
+    //     status: 0,
+    //     data: {
+    //       err: {
+    //         generatedTime: new Date(),
+    //         errMsg: 'Project type is required',
+    //         msg: 'Project type is required',
+    //         type: 'Client Error',
+    //       },
+    //     },
+    //   });
+    // }
     const collectionName = findProjectWithCode.event_collection_name;
     const modelReference = require(`../model/${collectionName}`);
-    const {did,ack,type}=req.body;
+    const { did, type, ack}=req.body;
     let dbSavePromise = ack.map(async (ac) => {
       const putDataIntoLoggerDb = await new modelReference({
         did: did,
@@ -634,7 +634,7 @@ const createEvents= async(req,res)=>{
     var eventsErrArr = [];
     var eventsErrMsgArr = [];
 
-    events.map((alert) => {
+    events.map((events) => {
       eventsErrArr.push(events.status);
       if (events.status === 'rejected') {
         eventsErrMsgArr.push(events.reason.message);
@@ -2106,7 +2106,7 @@ const getErrorCountByVersion = async (req, res) => {
 module.exports = {
   createLogs,
   createLogsV2,
-  createAlerts,
+  //createAlerts,
   getFilteredLogs,
   getAlertsWithFilter,
   crashFreeUsersDatewise,
