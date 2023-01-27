@@ -6,13 +6,13 @@ const { registerDevice
 
 
 
-router.post(' /RegisterDevice',
+router.post('/RegisterDevice',
     body('DeviceId').notEmpty(),
     body('IMEI_NO').notEmpty(),
-    body('HospitalName').notEmpty(),
+    body('Hospital_Name').notEmpty(),
     body('Ward_No').notEmpty(),
     body('Ventilator_Operator').notEmpty(),
     body('Doctor_Name').notEmpty(),
     registerDevice)
 
-module.exports=router;    
+module.exports = router; 

@@ -5,10 +5,6 @@ const RegisterDeviceSchema = mongoose.Schema({
         required:[true, "DeviceId is required"],
         type: String
     },
-    isSuperAdmin:{
-        type:Boolean,
-        default: false
-    },
     IMEI_NO:{
         required:[true,"IMEI_NO is required"],
         type:String

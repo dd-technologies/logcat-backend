@@ -3,7 +3,7 @@ const { validationResult } = require('express-validator');
 
 const registerDevice = async (req, res) => {
     try {
-      const { DeviceId, IMEI_NO, Hospital_Name,Ward_No,Ventilatior_Operator,Doctor_Name } = req.body;
+      const { DeviceId, IMEI_NO, Hospital_Name,Ward_No,Ventilator_Operator,Doctor_Name } = req.body;
       const DeviceIDTaken = await RegisterDevice.findOne({ DeviceId:DeviceId });
   
       const errors = validationResult(req);
@@ -27,21 +27,21 @@ const registerDevice = async (req, res) => {
       }
   
       if (DeviceIDTaken) {
-        // throw new AppError(`Email already taken`, 409);
+        
         return res.status(409).json({
           status: 0,
           data: {
             err: {
               generatedTime: new Date(),
-              errMsg: 'Email already taken',
-              msg: 'Email already taken',
+              errMsg: 'DeviceId already taken',
+              msg: 'DeviceId already taken',
               type: 'Duplicate Key Error',
             },
           },
         });
       }
   
-      if (!DeviceId|| !IMEI_NO|| !Hospital_Name||!Ward_No||!Ventilatior_Operator||!Doctor_Name) {
+      if (!DeviceId|| !IMEI_NO|| !Hospital_Name||!Ward_No||!Ventilator_Operator||!Doctor_Name) {
         return res.status(400).json({
           status: 0,
           data: {
@@ -55,26 +55,19 @@ const registerDevice = async (req, res) => {
         });
       }
   
-    //   const salt = await bcrypt.genSalt();
-    //   const passwordHash = await bcrypt.hash(password, salt);
-  
       const device = await new RegisterDevice({
         DeviceId, 
         IMEI_NO,
          Hospital_Name,
          Ward_No,
-         Ventilatior_Operator,
+         Ventilator_Operator,
          Doctor_Name
-        
       });
   
-      const savedDevice = await device.save(user);
+      const savedDevice = await device.save(device);
   
       if (savedDevice) {
-        const url = `${req.protocol}://${req.get('host')}/welcome`;
-  
-        new Email(email, url).sendWelcome();
-  
+        
         res.status(201).json({
           status: 1,
           data: { DeviceId: savedDevice.DeviceId, Hospital_Name: savedDevice.Hospital_Name},
@@ -91,7 +84,7 @@ const registerDevice = async (req, res) => {
               type: 'MongodbError',
             },
           },
-        });
+        });I
       }
     } catch (err) {
       return res.status(500).json({

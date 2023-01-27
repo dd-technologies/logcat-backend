@@ -9,6 +9,7 @@ require('dotenv').config({ path: './.env' });
 const users = require('./route/users.js');
 const projects = require('./route/projects');
 const logs = require('./route/logs');
+const RegisterDevice=require('./route/RegesterDevice')
 
 // creating connection with DB
 connectDB();
@@ -37,6 +38,8 @@ app.use('/api/logger/projects', projects);
 
 // Logs Routing
 app.use('/api/logger/logs', logs);
+//RegisterDevice
+app.use('/api/logger/device',RegisterDevice);
 // error handling for all routes which are not define
 app.all('*', (req, res, next) => {
   res.status(400).json({
