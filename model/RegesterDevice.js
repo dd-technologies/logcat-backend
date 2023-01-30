@@ -1,8 +1,8 @@
 const mongoose = require('mongoose')
 
 const RegisterDeviceSchema = mongoose.Schema({
-    DeviceId:{
-        required:[true, "DeviceId is required"],
+    did:{
+        required:[true, "did is required"],
         type: String
     },
     IMEI_NO:{

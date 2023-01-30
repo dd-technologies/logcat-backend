@@ -3,8 +3,8 @@ const { validationResult } = require('express-validator');
 
 const registerDevice = async (req, res) => {
     try {
-      const { DeviceId, IMEI_NO, Hospital_Name,Ward_No,Ventilator_Operator,Doctor_Name } = req.body;
-      const DeviceIDTaken = await RegisterDevice.findOne({ DeviceId:DeviceId });
+      const { did, IMEI_NO, Hospital_Name,Ward_No,Ventilator_Operator,Doctor_Name } = req.body;
+      const didTaken = await RegisterDevice.findOne({ did:did });
   
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -26,22 +26,22 @@ const registerDevice = async (req, res) => {
         });
       }
   
-      if (DeviceIDTaken) {
+      if (didTaken) {
         
         return res.status(409).json({
           status: 0,
           data: {
             err: {
               generatedTime: new Date(),
-              errMsg: 'DeviceId already taken',
-              msg: 'DeviceId already taken',
+              errMsg: 'did already taken',
+              msg: 'did already taken',
               type: 'Duplicate Key Error',
             },
           },
         });
       }
   
-      if (!DeviceId|| !IMEI_NO|| !Hospital_Name||!Ward_No||!Ventilator_Operator||!Doctor_Name) {
+      if (!did|| !IMEI_NO|| !Hospital_Name||!Ward_No||!Ventilator_Operator||!Doctor_Name) {
         return res.status(400).json({
           status: 0,
           data: {
@@ -56,7 +56,7 @@ const registerDevice = async (req, res) => {
       }
   
       const device = await new RegisterDevice({
-        DeviceId, 
+        did, 
         IMEI_NO,
          Hospital_Name,
          Ward_No,
@@ -70,7 +70,7 @@ const registerDevice = async (req, res) => {
         
         res.status(201).json({
           status: 1,
-          data: { DeviceId: savedDevice.DeviceId, Hospital_Name: savedDevice.Hospital_Name},
+          data: { did: savedDevice.did, Hospital_Name: savedDevice.Hospital_Name},
           message: 'Registered successfully!',
         });
       } else {
@@ -100,6 +100,29 @@ const registerDevice = async (req, res) => {
       });
     }
   };
+  const getAllRegisteredDevice = async (req, res) => {
+    try {
+      const allRegisteredDevice= await RegisterDevice .find().sort({'_id':-1});
+      return res.status(200).json({
+        status: 1,
+        data: { data: allRegisteredDevice},
+        message: 'Successful',
+      });
+    } catch (err) {
+      return res.status(500).json({
+        status: -1,
+        data: {
+          err: {
+            generatedTime: new Date(),
+            errMsg: err.stack,
+            msg: err.message,
+            type: err.name,
+          },
+        },
+      });
+    }
+  };
   module.exports={
-    registerDevice 
+    registerDevice, 
+    getAllRegisteredDevice
   }

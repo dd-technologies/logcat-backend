@@ -17,7 +17,7 @@ const router = express.Router();
 const {
   createLogs,
   createLogsV2,
-  //createAlerts,
+  createAlerts,
   getLogsByLogType,
   dateWiseCrashCount,
   dateWiseLogOccurrencesByLogMsg,
@@ -81,12 +81,12 @@ router.post(
   validateHeader,
   createLogsV2
 );
-// router.post("/alerts/:project_code",
-//   body('did').notEmpty(),
-//   body('type').notEmpty(),
-//   body('ack.*.code').notEmpty(),
-//   body('ack.*.timestamp').notEmpty(),
-//   createAlerts);
+router.post("/alerts/:project_code",
+  body('did').notEmpty(),
+  body('type').notEmpty(),
+  body('ack.*.code').notEmpty(),
+  body('ack.*.timestamp').notEmpty(),
+  createAlerts);
   router.post("/events/:project_code",
   body('did').notEmpty(),
   body('type').notEmpty(),
