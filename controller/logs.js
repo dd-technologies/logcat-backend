@@ -1,5 +1,7 @@
 const fs = require('fs');
 const Projects = require('../model/project');
+const logs=require('../model/project')
+//const RegisterDevice=require('../model/RegisterDevice')
 const { getDaysArray } = require('../helper/helperFunctions');
 const Device = require('../model/device');
 const Email = require('../utils/email');
@@ -36,8 +38,10 @@ const createLogs = async (req, res) => {
     }
 
     const collectionName = findProjectWithCode.collection_name;
+   // console.log(collectionName,'collectionName')
 
     const modelReference = require(`../model/${collectionName}`);
+    console.log(modelReference,'modelReference')
 
     const { version, type, log, device } = req.body;
 
@@ -445,6 +449,44 @@ const createLogsV2 = async (req, res) => {
     });
   }
 };
+const getLogesById=async(req,res)=>{
+  try{
+    const{did}=req.params;
+    const findDeviceById=await logs.findOne({did:did});
+    //console.log(findDeviceById,'findDeviceById');
+    if (!findDeviceById) {
+      return res.status(404).json({
+        status: 0,
+        data: {
+          err: {
+            generatedTime: new Date(),
+            errMsg: 'device not found',
+            msg: 'device not found',
+            type: 'Client Error',
+          },
+        },
+      });
+    }
+    const collectionName=require(`../model/${findDeviceById.collection_name}.js`);
+    console.log(collectionName,'collectionName')
+
+  }
+  catch(err){
+    return res.status(500).json({
+      status: -1,
+      data: {
+        err: {
+          generatedTime: new Date(),
+          errMsg: err.stack,
+          msg: err.message,
+          type: err.name,
+        },
+      },
+    });
+
+
+  }
+}
 
 /**
  * desc     Alert
@@ -490,7 +532,9 @@ const createAlerts = async (req, res, next) => {
       });
     }
     const collectionName = findProjectWithCode.alert_collection_name;
+   // console.log(collectionName,'collectionName---')
     const modelReference = require(`../model/${collectionName}`);
+  //  console.log(modelReference)
 
     const { did, type, ack } = req.body;
     // console.log('type', type);
@@ -564,6 +608,7 @@ const createEvents= async(req,res,next)=>{
 
     const{project_code}=req.params;
     const findProjectWithCode = await Projects.findOne({ code: project_code });
+    //console.log(findProjectWithCode,'findProjectWithProjectCode----')
 
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -599,21 +644,11 @@ const createEvents= async(req,res,next)=>{
     }
 
     
-    // if (!req.query.projectType) {
-    //   return res.status(400).json({
-    //     status: 0,
-    //     data: {
-    //       err: {
-    //         generatedTime: new Date(),
-    //         errMsg: 'Project type is required',
-    //         msg: 'Project type is required',
-    //         type: 'Client Error',
-    //       },
-    //     },
-    //   });
-    // }
+  
     const collectionName = findProjectWithCode.event_collection_name;
+   console.log(collectionName,'collectionName-----')
     const modelReference = require(`../model/${collectionName}`);
+    console.log(modelReference,'modelReference');
     const { did, type, ack}=req.body;
     let dbSavePromise = ack.map(async (ac) => {
       const putDataIntoLoggerDb = await new modelReference({
@@ -909,6 +944,107 @@ const getAlertsWithFilter = async (req, res) => {
   }
 };
 
+const getEventsWithFilter = async (req, res) => {
+  try {
+    const { projectCode } = req.params;
+
+    if (!req.query.projectType) {
+      return res.status(400).json({
+        status: 0,
+        data: {
+          err: {
+            generatedTime: new Date(),
+            errMsg: 'Project type is required',
+            msg: 'Project type is required',
+            type: 'Client Error',
+          },
+        },
+      });
+    }
+
+    const isProjectExist = await Projects.findOne({ code: projectCode });
+    if (!isProjectExist) {
+      return res.status(404).json({
+        status: 0,
+        data: {
+          err: {
+            generatedTime: new Date(),
+            errMsg: 'Project not found.',
+            msg: 'Project not found.',
+            type: 'Internal Server Error',
+          },
+        },
+      });
+    }
+
+    const collectionName = require(`../model/${isProjectExist.event_collection_name}.js`);
+
+    let dt = new Date(req.query.endDate);
+    dt.setDate(dt.getDate() + 1);
+
+    var sortOperator = { $sort: {} };
+    let sort = req.query.sort || '-createdAt';
+
+    sort.includes('-')
+      ? (sortOperator['$sort'][sort.replace('-', '')] = -1)
+      : (sortOperator['$sort'][sort] = 1);
+
+    var matchOperator = {
+      $match: {
+        createdAt: {
+          $gte: new Date(req.query.startDate),
+          $lte: dt,
+        },
+        type: req.query.projectType,
+      },
+    };
+
+    let page = parseInt(req.query.page) || 1;
+    let limit = parseInt(req.query.limit) || 500;
+    let skip = (page - 1) * limit;
+    console.log(sortOperator);
+    const data = await collectionName.aggregate([
+      {
+        $facet: {
+          totalRecords: [
+            matchOperator,
+            {
+              $count: 'total',
+            },
+          ],
+          data: [
+            matchOperator,
+            sortOperator,
+            { $skip: skip },
+            { $limit: limit },
+          ],
+        },
+      },
+    ]);
+
+    return res.status(200).json({
+      status: 1,
+      message: 'Getting all events',
+      data: {
+        count: data[0]?.totalRecords[0]?.total,
+        pageLimit: data[0]?.data.length,
+        events: data[0]?.data,
+      },
+    });
+  } catch (err) {
+    return res.status(500).json({
+      status: -1,
+      data: {
+        err: {
+          generatedTime: new Date(),
+          errMsg: err.stack,
+          msg: err.message,
+          type: err.name,
+        },
+      },
+    });
+  }
+};
 const crashFreeUsersDatewise = async (req, res) => {
   try {
     const { projectCode } = req.params;
@@ -944,6 +1080,7 @@ const crashFreeUsersDatewise = async (req, res) => {
       });
     }
     const collectionName = require(`../model/${projectCollection.collection_name}.js`);
+    console.log('collectionName',collectionName)
 
     let dt = new Date(req.query.endDate);
     dt.setDate(dt.getDate() + 1);
@@ -1386,6 +1523,7 @@ const getLogsByLogType = async (req, res) => {
     }
 
     const collectionName = require(`../model/${isProjectExist.collection_name}.js`);
+    console.log(collectionName,'collectionName')
 
     let dt = new Date(req.query.endDate);
     dt.setDate(dt.getDate() + 1);
@@ -2108,7 +2246,9 @@ module.exports = {
   createLogsV2,
   createAlerts,
   getFilteredLogs,
+  getLogesById,
   getAlertsWithFilter,
+  getEventsWithFilter,
   crashFreeUsersDatewise,
   crashlyticsData,
   getErrorCountByOSArchitecture,

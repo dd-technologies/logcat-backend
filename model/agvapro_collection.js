@@ -2,7 +2,6 @@
     const mongoose = require('mongoose');
     const device = require('./device')
     const logs = require('./logs')
-    //const RegisterDevice=require('./RegisterDevice')
     
         const schemaOptions = {
             timestamps: true,
@@ -14,16 +13,16 @@
             }
         }
         
-        const ventilatortesting_collectionSchema = new mongoose.Schema(
+        const agvapro_collectionSchema = new mongoose.Schema(
             {
                 version: {
                     type: String,
                     required: [true, 'Log version is required.']
                 },
                 type: {
-                    type: String,
-                    enum: ["001","002"],
-                    required: [true, "Atleast one model required."]
+                  type: String,
+                  enum: ["001","002","003"],
+                  required: [true, "Atleast one model required."]
                 },
                 device:{ type: mongoose.Schema.Types.ObjectId, ref: 'Device' },
                 log:logs
@@ -31,9 +30,9 @@
             schemaOptions
         )
 
-        ventilatortesting_collectionSchema.index({'type': 1})
+        agvapro_collectionSchema.index({'type': 1})
                 
-        const ventilatortesting_collection = mongoose.model('ventilatortesting_collection', ventilatortesting_collectionSchema)
+        const agvapro_collection = mongoose.model('agvapro_collection', agvapro_collectionSchema)
         
-        module.exports = ventilatortesting_collection
+        module.exports = agvapro_collection
         

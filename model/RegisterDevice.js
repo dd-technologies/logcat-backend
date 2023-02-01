@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 
 const RegisterDeviceSchema = mongoose.Schema({
-    did:{
+    DeviceId:{
         required:[true, "did is required"],
         type: String
     },
@@ -27,6 +27,7 @@ const RegisterDeviceSchema = mongoose.Schema({
         required:[true,"Doctor Name is required"],
         type:String
     }
+
     
 
     

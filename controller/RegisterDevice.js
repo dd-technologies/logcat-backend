@@ -1,10 +1,10 @@
-const RegisterDevice = require("../model/RegesterDevice");
+const RegisterDevice = require("../model/RegisterDevice");
 const { validationResult } = require('express-validator');
 
 const registerDevice = async (req, res) => {
     try {
-      const { did, IMEI_NO, Hospital_Name,Ward_No,Ventilator_Operator,Doctor_Name } = req.body;
-      const didTaken = await RegisterDevice.findOne({ did:did });
+      const { DeviceId, IMEI_NO, Hospital_Name,Ward_No,Ventilator_Operator,Doctor_Name } = req.body;
+      const DeviceIdTaken = await RegisterDevice.findOne({ DeviceId:DeviceId });
   
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -26,22 +26,22 @@ const registerDevice = async (req, res) => {
         });
       }
   
-      if (didTaken) {
+      if (DeviceIdTaken) {
         
         return res.status(409).json({
           status: 0,
           data: {
             err: {
               generatedTime: new Date(),
-              errMsg: 'did already taken',
-              msg: 'did already taken',
+              errMsg: 'DeviceId already taken',
+              msg: 'DeviceId already taken',
               type: 'Duplicate Key Error',
             },
           },
         });
       }
   
-      if (!did|| !IMEI_NO|| !Hospital_Name||!Ward_No||!Ventilator_Operator||!Doctor_Name) {
+      if (!DeviceId|| !IMEI_NO|| !Hospital_Name||!Ward_No||!Ventilator_Operator||!Doctor_Name) {
         return res.status(400).json({
           status: 0,
           data: {
@@ -56,7 +56,7 @@ const registerDevice = async (req, res) => {
       }
   
       const device = await new RegisterDevice({
-        did, 
+        DeviceId, 
         IMEI_NO,
          Hospital_Name,
          Ward_No,
@@ -70,7 +70,7 @@ const registerDevice = async (req, res) => {
         
         res.status(201).json({
           status: 1,
-          data: { did: savedDevice.did, Hospital_Name: savedDevice.Hospital_Name},
+          data: { DeviceId: savedDevice.DeviceId, Hospital_Name: savedDevice.Hospital_Name},
           message: 'Registered successfully!',
         });
       } else {
@@ -122,7 +122,68 @@ const registerDevice = async (req, res) => {
       });
     }
   };
+
+  const getRegisterDeviceById=async(req,res)=>{
+    try {
+      const { did } = req.params;
+    const RegisterDeviceCollection=await RegisterDevice.findOne({deviceId:did});getRegisterDeviceById
+    console.log('registerDeviceCollection',RegisterDeviceCollection)
+    if(!RegisterDeviceCollection){
+      return res.status(404).json({
+        status:0,
+        data:{
+          err:{
+            generatedTime: new Date(),
+            errMsg: 'RegisterDevice not found',
+            msg: 'RegisterDevice not found',
+            type: 'Internal Server Error',
+          },
+        },
+      })
+    }
+    const collectionName=require(`../model/${RegisterDeviceCollection.collection_name}.js`);
+    console.log(collectionName,'collectionName')
+    const particularDeviceById=await collectionName.aggregate([
+      {
+        $match:{
+          deciceId:'did'
+
+        },
+        $lookup:{
+          from:'devices',
+          localField:'device',
+          forgenField:'_id',
+          as:'device'
+        }
+      }
+    ]);
+    return res.status(200).json({
+      status: 1,
+      data: {
+        particularDeviceById:particularDeviceById,
+        //modelNameParticularCount: modelNameParticularCount[0].count,
+      },
+      message: 'successfull',
+    });
+  }
+  catch(err){
+    return res.status(500).json({
+      status: -1,
+      data: {
+        err: {
+          generatedTime: new Date(),
+          errMsg: err.stack,
+          msg: err.message,
+          type: err.name,
+        },
+      },
+    });
+  
+  }
+}
+
   module.exports={
     registerDevice, 
-    getAllRegisteredDevice
+    getAllRegisteredDevice,
+    getRegisterDeviceById
   }

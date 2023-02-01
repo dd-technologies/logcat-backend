@@ -9,7 +9,7 @@ require('dotenv').config({ path: './.env' });
 const users = require('./route/users.js');
 const projects = require('./route/projects');
 const logs = require('./route/logs');
-const RegisterDevice=require('./route/RegesterDevice')
+const RegisterDevice=require('./route/RegisterDevice')
 
 // creating connection with DB
 connectDB();
