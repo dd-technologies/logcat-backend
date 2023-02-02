@@ -3,7 +3,7 @@ const { validationResult } = require('express-validator');
 
 const registerDevice = async (req, res) => {
     try {
-      const { DeviceId, IMEI_NO, Hospital_Name,Ward_No,Ventilator_Operator,Doctor_Name } = req.body;
+      const { DeviceId,AliasName, IMEI_NO, Hospital_Name,Ward_No,Ventilator_Operator,Doctor_Name } = req.body;
       const DeviceIdTaken = await RegisterDevice.findOne({ DeviceId:DeviceId });
   
       const errors = validationResult(req);
@@ -41,7 +41,7 @@ const registerDevice = async (req, res) => {
         });
       }
   
-      if (!DeviceId|| !IMEI_NO|| !Hospital_Name||!Ward_No||!Ventilator_Operator||!Doctor_Name) {
+      if (!DeviceId|| !AliasName|| !IMEI_NO|| !Hospital_Name||!Ward_No||!Ventilator_Operator||!Doctor_Name) {
         return res.status(400).json({
           status: 0,
           data: {
@@ -61,7 +61,8 @@ const registerDevice = async (req, res) => {
          Hospital_Name,
          Ward_No,
          Ventilator_Operator,
-         Doctor_Name
+         Doctor_Name,
+         AliasName
       });
   
       const savedDevice = await device.save(device);

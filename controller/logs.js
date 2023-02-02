@@ -2,6 +2,8 @@ const fs = require('fs');
 const Projects = require('../model/project');
 const logs=require('../model/project')
 //const RegisterDevice=require('../model/RegisterDevice')
+const alert_ventilatortesting_collection=require('../model/alert_ventilatortesting_collection');
+const event_agvapro_collection=require('../model/event_agvapro_collection');
 const { getDaysArray } = require('../helper/helperFunctions');
 const Device = require('../model/device');
 const Email = require('../utils/email');
@@ -43,13 +45,13 @@ const createLogs = async (req, res) => {
     const modelReference = require(`../model/${collectionName}`);
     console.log(modelReference,'modelReference')
 
-    const { version, type, log, device } = req.body;
+    const { did,version, type, log, device } = req.body;
 
     //  above details will be put in project tables
 
     //  Make entries in Device
     const Dvc = await new Device({
-      did: device.did,
+      //did: device.did,
       name: device.name,
       manufacturer: device.manufacturer,
       os: {
@@ -76,6 +78,7 @@ const createLogs = async (req, res) => {
     }
 
     const putDataIntoLoggerDb = await new modelReference({
+   //   did:did,
       version: version,
       type: type,
       device: isDeviceSaved._id,
@@ -449,11 +452,12 @@ const createLogsV2 = async (req, res) => {
     });
   }
 };
-const getLogesById=async(req,res)=>{
+const getAlertsById=async(req,res)=>{
   try{
     const{did}=req.params;
-    const findDeviceById=await logs.findOne({did:did});
-    //console.log(findDeviceById,'findDeviceById');
+    const findDeviceById=await alert_ventilatortesting_collection.find({did:did});
+
+    console.log(findDeviceById,'findDeviceById');
     if (!findDeviceById) {
       return res.status(404).json({
         status: 0,
@@ -467,8 +471,15 @@ const getLogesById=async(req,res)=>{
         },
       });
     }
-    const collectionName=require(`../model/${findDeviceById.collection_name}.js`);
-    console.log(collectionName,'collectionName')
+    // const collectionName=require(`../model/${findDeviceById.collection_name}.js`);
+    // console.log(collectionName,'collectionName');
+    return res.status(200).json({
+      status:1,
+      data:{
+        findDeviceById:findDeviceById
+      },
+      message:'successfull'
+    });
 
   }
   catch(err){
@@ -487,6 +498,54 @@ const getLogesById=async(req,res)=>{
 
   }
 }
+const getEventsById=async(req,res)=>{
+  try{
+    const{did}=req.params;
+    const findDeviceById=await event_agvapro_collection.find({did:did});
+
+    console.log(findDeviceById,'findDeviceById');
+    if (!findDeviceById) {
+      return res.status(404).json({
+        status: 0,
+        data: {
+          err: {
+            generatedTime: new Date(),
+            errMsg: 'device not found',
+            msg: 'device not found',
+            type: 'Client Error',
+          },
+        },
+      });
+    }
+    // const collectionName=require(`../model/${findDeviceById.collection_name}.js`);
+    // console.log(collectionName,'collectionName');
+    return res.status(200).json({
+      status:1,
+      data:{
+        findDeviceById:findDeviceById
+      },
+      message:'successfull'
+    });
+
+  }
+  catch(err){
+    return res.status(500).json({
+      status: -1,
+      data: {
+        err: {
+          generatedTime: new Date(),
+          errMsg: err.stack,
+          msg: err.message,
+          type: err.name,
+        },
+      },
+    });
+
+
+  }
+}
+
+
 
 /**
  * desc     Alert
@@ -649,52 +708,94 @@ const createEvents= async(req,res,next)=>{
    console.log(collectionName,'collectionName-----')
     const modelReference = require(`../model/${collectionName}`);
     console.log(modelReference,'modelReference');
-    const { did, type, ack}=req.body;
-    let dbSavePromise = ack.map(async (ac) => {
-      const putDataIntoLoggerDb = await new modelReference({
-        did: did,
-        ack: {
-          msg: ac.msg,
-          code: ac.code,
-          date: ac.timestamp,
-        },
-        type: type,
-      });
-
-      return putDataIntoLoggerDb.save(putDataIntoLoggerDb);
-    });
-
-    let events = await Promise.allSettled(dbSavePromise);
-
-    var eventsErrArr = [];
-    var eventsErrMsgArr = [];
-
-    events.map((events) => {
-      eventsErrArr.push(events.status);
-      if (events.status === 'rejected') {
-        eventsErrMsgArr.push(events.reason.message);
-      }
-    });
-
-    if (!eventsErrArr.includes('rejected')) {
-      return res.status(201).json({
-        status: 1,
-        data: { eventsCount: events.length },
-        message: 'Successful',
-      });
-    } else {
-      res.status(400).json({
-        status: eventsErrArr.length === events.length ? -1 : 0,
+    const { did, type, message}=req.body;
+    if(!did||!type||!message){
+      return res.status(400).json({
+        status: 0,
         data: {
           err: {
             generatedTime: new Date(),
-            errMsg: eventsErrMsgArr.join(' | '),
-            msg: `Error saving ${eventsErrMsgArr.length} out of ${events.length} events(s)`,
-            type: 'ValidationError',
+            errMsg: 'Please fill all the details.',
+            msg: 'Please fill all the details.',
+            type: 'Client Error',
           },
         },
       });
+      
     }
+    const events=await new modelReference({
+      did:did,
+      message:message,
+      type:type
+    });
+    const SaveEvents=await events.save(events);
+    if(SaveEvents){
+      res.status(201).json({
+        status: 1,
+        //data: { DeviceId: savedDevice.DeviceId, Hospital_Name: savedDevice.Hospital_Name},
+        message: 'Event add!',
+      });
+    }
+    else {
+      res.status(500).json({
+        status: 0,
+        data: {
+          err: {
+            generatedTime: new Date(),
+            errMsg: 'Some error happened during registration',
+            msg: 'Some error happened during registration',
+            type: 'MongodbError',
+          },
+        },
+      });I
+    }
+    // let dbSavePromise = ack.map(async (ac) => {
+    //   const putDataIntoLoggerDb = await new modelReference({
+    //     did: did,
+    //     // ack: {
+    //     //   msg: ac.msg,
+    //     //   code: ac.code,
+    //     //   date: ac.timestamp,
+    //     // },
+    //     message:message,
+
+    //     type: type,
+    //   });
+
+    //   return putDataIntoLoggerDb.save(putDataIntoLoggerDb);
+    // });
+
+    // let events = await Promise.allSettled(dbSavePromise);
+
+    // var eventsErrArr = [];
+    // var eventsErrMsgArr = [];
+
+    // events.map((events) => {
+    //   eventsErrArr.push(events.status);
+    //   if (events.status === 'rejected') {
+    //     eventsErrMsgArr.push(events.reason.message);
+    //   }
+    // });
+
+    // if (!eventsErrArr.includes('rejected')) {
+    //   return res.status(201).json({
+    //     status: 1,
+    //     data: { eventsCount: events.length },
+    //     message: 'Successful',
+    //   });
+    // } else {
+    //   res.status(400).json({
+    //     status: eventsErrArr.length === events.length ? -1 : 0,
+    //     data: {
+    //       err: {
+    //         generatedTime: new Date(),
+    //         errMsg: eventsErrMsgArr.join(' | '),
+    //         msg: `Error saving ${eventsErrMsgArr.length} out of ${events.length} events(s)`,
+    //         type: 'ValidationError',
+    //       },
+    //     },
+    //   });
+    // }
     
 
   }
@@ -2246,7 +2347,8 @@ module.exports = {
   createLogsV2,
   createAlerts,
   getFilteredLogs,
-  getLogesById,
+  getAlertsById,
+  getEventsById,
   getAlertsWithFilter,
   getEventsWithFilter,
   crashFreeUsersDatewise,

@@ -231,17 +231,21 @@ const createNewProject = async (req, res) => {
                   enum: [${typeCodeArray}],
                   required: [true, "Atleast one model required."]
                 },
-                ack:{
-                    msg: String,
-                    code: {
-                      type: String,
-                      required: [true, 'Code is required']
-                    },
-                    date: {
-                      type: Date,
-                      required: [true, 'Date time is required']
-                    }
-                  }
+                // ack:{
+                //     msg: String,
+                //     code: {
+                //       type: String,
+                //       required: [true, 'Code is required']
+                //     },
+                //     date: {
+                //       type: Date,
+                //       required: [true, 'Date time is required']
+                //     }
+                //   }
+                message:{
+                  type:String,
+                  required:[true,"message is required"]
+                }
             },
             schemaOptions
         )
@@ -306,8 +310,10 @@ const createNewProject = async (req, res) => {
                   enum: [${typeCodeArray}],
                   required: [true, "Atleast one model required."]
                 },
-                device:{ type: mongoose.Schema.Types.ObjectId, ref: 'Device' },
-                log:logs
+                device:{ type: mongoose.Schema.Types.ObjectId, 
+                  ref: 'Device' },
+                log:logs,
+                
             },
             schemaOptions
         )
