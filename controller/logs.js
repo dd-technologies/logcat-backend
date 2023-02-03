@@ -1,8 +1,9 @@
 const fs = require('fs');
 const Projects = require('../model/project');
-const logs=require('../model/project')
+//const logs=require('../model/project')
 //const RegisterDevice=require('../model/RegisterDevice')
 const alert_ventilatortesting_collection=require('../model/alert_ventilatortesting_collection');
+const ventilatorprre_collection=require('../model/ventilatorprre_collection');
 const event_agvapro_collection=require('../model/event_agvapro_collection');
 const { getDaysArray } = require('../helper/helperFunctions');
 const Device = require('../model/device');
@@ -45,13 +46,13 @@ const createLogs = async (req, res) => {
     const modelReference = require(`../model/${collectionName}`);
     console.log(modelReference,'modelReference')
 
-    const { did,version, type, log, device } = req.body;
+    const { version, type, log, device } = req.body;
 
     //  above details will be put in project tables
 
     //  Make entries in Device
     const Dvc = await new Device({
-      //did: device.did,
+      did: device.did,
       name: device.name,
       manufacturer: device.manufacturer,
       os: {
@@ -78,10 +79,10 @@ const createLogs = async (req, res) => {
     }
 
     const putDataIntoLoggerDb = await new modelReference({
-   //   did:did,
+   
       version: version,
       type: type,
-      device: isDeviceSaved._id,
+      device: isDeviceSaved.did,    //make changes here for save device_id in database
       log: {
         file: log.file,
         date: log.date,
@@ -498,6 +499,48 @@ const getAlertsById=async(req,res)=>{
 
   }
 }
+const getLogsById=async(req,res)=>{
+  try{
+    const{device}=req.params;
+    const findDeviceById=await ventilatorprre_collection.find({did:device});
+    if(!findDeviceById){
+      return res.status(404).json({
+        status:0,
+        data:{
+          err:{
+            generatedTime:newDate(),
+            errMsg:'device not found',
+            msg:'device not found',
+            type:'client Error',
+          },
+        },
+      });
+    }
+    return res.status(200).json({
+      status:1,
+      data:{
+        findDeviceById:findDeviceById
+      },
+      message:'successfull'
+    });
+
+  }
+  catch(err){
+    return res.status(500).json({
+      status:-1,
+      data:{
+        err:{
+          generatedTime:newDate(),
+          errMsg:err.stack,
+          msg:err.message,
+          type:err.name,
+        },
+
+      },
+    });
+  }
+
+}
 const getEventsById=async(req,res)=>{
   try{
     const{did}=req.params;
@@ -555,7 +598,7 @@ const createAlerts = async (req, res, next) => {
   try {
     const { project_code } = req.params;
     // check project exist or not
-    const findProjectWithCode = await Projects.findOne({ code: project_code });
+    const findProjectWithCode = await Projects.findOne({ code: project_code }).sort({_id:-1});
 
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -2361,5 +2404,6 @@ module.exports = {
   getLogsCountWithModelName,
   getCrashOccurrenceByLogMsg,
   getErrorCountByVersion,
-  createEvents
+  createEvents,
+  getLogsById
 };

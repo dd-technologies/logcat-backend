@@ -4,7 +4,8 @@ const { validationResult } = require('express-validator');
 const registerDevice = async (req, res) => {
     try {
       const { DeviceId,AliasName, IMEI_NO, Hospital_Name,Ward_No,Ventilator_Operator,Doctor_Name } = req.body;
-      const DeviceIdTaken = await RegisterDevice.findOne({ DeviceId:DeviceId });
+      const DeviceIdTaken = await RegisterDevice.findOne({ DeviceId:DeviceId }).sort({'DeviceId':-1});
+      const AliasNameTaken=await RegisterDevice.findOne({AliasName:AliasName});
   
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -40,6 +41,21 @@ const registerDevice = async (req, res) => {
           },
         });
       }
+      if(AliasNameTaken){
+        return res.status(409).json({
+          status: 0,
+          data: {
+            err: {
+              generatedTime: new Date(),
+              errMsg: 'AliasName already taken',
+              msg: 'AliasName already taken',
+              type: 'Duplicate Key Error',
+            },
+          },
+        });
+      }
+
+      
   
       if (!DeviceId|| !AliasName|| !IMEI_NO|| !Hospital_Name||!Ward_No||!Ventilator_Operator||!Doctor_Name) {
         return res.status(400).json({
@@ -57,15 +73,16 @@ const registerDevice = async (req, res) => {
   
       const device = await new RegisterDevice({
         DeviceId, 
+        AliasName,
         IMEI_NO,
          Hospital_Name,
          Ward_No,
          Ventilator_Operator,
          Doctor_Name,
-         AliasName
+         
       });
   
-      const savedDevice = await device.save(device);
+      const savedDevice = await device.save(device)
   
       if (savedDevice) {
         

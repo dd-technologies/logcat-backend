@@ -2,10 +2,7 @@ const mongoose = require("mongoose");
 
 const logsSchema = mongoose.Schema(
   {
-    did:  {
-      type: String,
-      required: [true, "Device id is required."],
-    },
+   
     file: {
       type: String,
       required: [true, "Log file name is required."],

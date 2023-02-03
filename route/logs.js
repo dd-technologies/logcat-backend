@@ -29,13 +29,12 @@ const {
   crashFreeUsersDatewise,
   getFilteredLogs,
   getAlertsWithFilter,
-  
   getErrorCountByVersion,
   createEvents,
   getEventsWithFilter,
-  //getAlertsById,
   getEventsById,
-  getAlertsById
+  getAlertsById,
+  getLogsById
 } = require("../controller/logs");
 
 const { isAuth } = require("../middleware/authMiddleware");
@@ -101,6 +100,7 @@ router.post("/alerts/:project_code",
 
 //Protected Route
 router.get("/:projectCode", isAuth, getFilteredLogs);
+
 router.get("/getLogsCount/:projectCode", isAuth, getLogsByLogType);
 router.get("/datewiselogcount/:projectCode", isAuth, dateWiseCrashCount);
 router.get(
@@ -112,6 +112,7 @@ router.get("/alerts/:projectCode", isAuth, getAlertsWithFilter);
 router.get("/events/:projectCode",isAuth,getEventsWithFilter);
 router.get("/deviceAlerts/:did",getAlertsById);
 router.get("/deviceEvents/:did",getEventsById);
+router.get("/deviceLogs/:device",getLogsById)
 
 router.get("/get-crashlytics-data/:projectCode", isAuth, crashlyticsData);
 router.get("/log-occurrences-datewise/:projectCode", isAuth, dateWiseLogOccurrencesByLogMsg);

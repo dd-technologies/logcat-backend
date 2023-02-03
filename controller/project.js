@@ -310,8 +310,8 @@ const createNewProject = async (req, res) => {
                   enum: [${typeCodeArray}],
                   required: [true, "Atleast one model required."]
                 },
-                device:{ type: mongoose.Schema.Types.ObjectId, 
-                  ref: 'Device' },
+                device:{ type:String, 
+                  ref: 'did' },
                 log:logs,
                 
             },

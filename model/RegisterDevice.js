@@ -5,6 +5,11 @@ const RegisterDeviceSchema = mongoose.Schema({
         required:[true, "did is required"],
         type: String
     },
+    AliasName:{
+        required:[true,'AliasName is required'],
+        type:String
+
+    },
     IMEI_NO:{
         required:[true,"IMEI_NO is required"],
         type:String
