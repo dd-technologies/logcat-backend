@@ -34,7 +34,8 @@ const {
   getEventsWithFilter,
   getEventsById,
   getAlertsById,
-  getLogsById
+  getLogsById,
+  getAllEvents
 } = require("../controller/logs");
 
 const { isAuth } = require("../middleware/authMiddleware");
@@ -112,7 +113,8 @@ router.get("/alerts/:projectCode", isAuth, getAlertsWithFilter);
 router.get("/events/:projectCode",isAuth,getEventsWithFilter);
 router.get("/deviceAlerts/:did",getAlertsById);
 router.get("/deviceEvents/:did",getEventsById);
-router.get("/deviceLogs/:device",getLogsById)
+router.get("/deviceLogs/:device",getLogsById);
+router.get("/Allevents/Events",getAllEvents);
 
 router.get("/get-crashlytics-data/:projectCode", isAuth, crashlyticsData);
 router.get("/log-occurrences-datewise/:projectCode", isAuth, dateWiseLogOccurrencesByLogMsg);

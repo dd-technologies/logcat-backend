@@ -81,7 +81,7 @@ const createNewProject = async (req, res) => {
         status: 0,
         data: {
           err: {
-            generatedTime: new Date(),
+            generatedTime: new Date(year,month,day,hours,minutes,seconds),
             errMsg: 'Project with provided name already exist!!',
             msg: 'Project with provided name already exist!!',
             type: 'Internal Server Error',
@@ -163,7 +163,13 @@ const createNewProject = async (req, res) => {
                       type: Date,
                       required: [true, 'Date time is required']
                     }
-                  }
+                },
+                priority:{
+                  type:String,
+                  required:[true,'priority is required']
+                }
+
+
             },
             schemaOptions
         )
@@ -313,8 +319,13 @@ const createNewProject = async (req, res) => {
                 device:{ type:String, 
                   ref: 'did' },
                 log:logs,
+                state:{
+                  type:String,
+                  required:[true,"state is required"]
+                },
                 
             },
+         
             schemaOptions
         )
 

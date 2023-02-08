@@ -145,7 +145,7 @@ const registerDevice = async (req, res) => {
     try {
       const { did } = req.params;
     const RegisterDeviceCollection=await RegisterDevice.findOne({deviceId:did});getRegisterDeviceById
-    console.log('registerDeviceCollection',RegisterDeviceCollection)
+   // console.log('registerDeviceCollection',RegisterDeviceCollection)
     if(!RegisterDeviceCollection){
       return res.status(404).json({
         status:0,
@@ -160,7 +160,7 @@ const registerDevice = async (req, res) => {
       })
     }
     const collectionName=require(`../model/${RegisterDeviceCollection.collection_name}.js`);
-    console.log(collectionName,'collectionName')
+    //console.log(collectionName,'collectionName')
     const particularDeviceById=await collectionName.aggregate([
       {
         $match:{

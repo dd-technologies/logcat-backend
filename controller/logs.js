@@ -4,7 +4,8 @@ const Projects = require('../model/project');
 //const RegisterDevice=require('../model/RegisterDevice')
 const alert_ventilatortesting_collection=require('../model/alert_ventilatortesting_collection');
 const ventilatorprre_collection=require('../model/ventilatorprre_collection');
-const event_agvapro_collection=require('../model/event_agvapro_collection');
+//const event_agvapro_collection=require('../model/event_agvapro_collection');
+const event_ventilator_collection=require('../model/event_ventilator_collection')
 const { getDaysArray } = require('../helper/helperFunctions');
 const Device = require('../model/device');
 const Email = require('../utils/email');
@@ -44,7 +45,7 @@ const createLogs = async (req, res) => {
    // console.log(collectionName,'collectionName')
 
     const modelReference = require(`../model/${collectionName}`);
-    console.log(modelReference,'modelReference')
+    //console.log(modelReference,'modelReference')
 
     const { version, type, log, device } = req.body;
 
@@ -77,6 +78,39 @@ const createLogs = async (req, res) => {
         },
       });
     }
+    // const date=new Date();
+    // let hours=date.getHours();
+    // if(hours<24&&hours>=0){
+    //   log.status="active";
+
+    // }
+    // else{
+    //   log.status="Inactive"
+    // }
+
+
+    //console.log(log.date);
+
+    // console.log(log.date.grt)
+    const d=log.date;
+    //console.log(d);
+   // const dt=new Date(d);
+    //console.log(dt.getHours());
+
+    // console.log(d);
+    // let hour = d.getHours();
+    // console.log(hour);
+    const pickedDate=d.replace(/- /g," ");
+    const todayDate=new Date();
+    todayDate.setHours(0,0,0,0);
+    dateDiff=Math.abs(Number(todayDate)-pickedDate);
+    if(dateDiff>86400000){
+      log.state='active'
+    }
+    else{
+      log.state='inactive'
+    }
+
 
     const putDataIntoLoggerDb = await new modelReference({
    
@@ -89,6 +123,7 @@ const createLogs = async (req, res) => {
         message: decodeURI(log.msg),
         type: log.type,
       },
+       state:log.state,
     });
 
     const isLoggerSaved = await putDataIntoLoggerDb.save(putDataIntoLoggerDb);
@@ -587,6 +622,30 @@ const getEventsById=async(req,res)=>{
 
   }
 }
+const getAllEvents = async (req, res) => {
+  try {
+    
+    const allEvents= await event_ventilator_collection.find();
+    //console.log(allEvents);
+    return res.status(200).json({
+      status: 1,
+      data: { data: allEvents},
+      message: 'Successful',
+    });
+  } catch (err) {
+    return res.status(500).json({
+      status: -1,
+      data: {
+        err: {
+          generatedTime: new Date(),
+          errMsg: err.stack,
+          msg: err.message,
+          type: err.name,
+        },
+      },
+    });
+  }
+};
 
 
 
@@ -636,15 +695,42 @@ const createAlerts = async (req, res, next) => {
     const collectionName = findProjectWithCode.alert_collection_name;
    // console.log(collectionName,'collectionName---')
     const modelReference = require(`../model/${collectionName}`);
+    
   //  console.log(modelReference)
 
-    const { did, type, ack } = req.body;
+    const { did, type, ack,priority } = req.body;
+    // const d=ac.date
+    // console.log(d);
     // console.log('type', type);
 
     let arrayOfObjects = [];
     for (let i = 0; i < ack.length; i++) {
       arrayOfObjects.push(ack[i]);
     }
+//     // console.log(arrayOfObjects)
+//     // const d=ack[2];
+//     // console.log(d);
+
+// // SimpleDateFormat inFormat = new SimpleDateFormat("dd-MMM-yyyy");
+//     let result=ack.map(a=>a.timestamp);
+//     let d=Date.parse(result);
+//     console.log(d);
+
+//     // console.log(result);
+//     // let d=result.toString();
+//     // console.log(d)
+//     // let d1=Date.parse(d);
+    
+
+//     // console.log(d)
+
+
+//     let todayDate=new Date();
+//     var diff=(todayDate.getTime()-d.getTime())/1000;
+//     diff=diff/(60*60);
+//     console.log(diff);
+    
+
 
     let dbSavePromise = ack.map(async (ac) => {
       const putDataIntoLoggerDb = await new modelReference({
@@ -655,6 +741,7 @@ const createAlerts = async (req, res, next) => {
           date: ac.timestamp,
         },
         type: type,
+        priority:priority
       });
 
       return putDataIntoLoggerDb.save(putDataIntoLoggerDb);
@@ -748,9 +835,9 @@ const createEvents= async(req,res,next)=>{
     
   
     const collectionName = findProjectWithCode.event_collection_name;
-   console.log(collectionName,'collectionName-----')
+   //console.log(collectionName,'collectionName-----')
     const modelReference = require(`../model/${collectionName}`);
-    console.log(modelReference,'modelReference');
+    //console.log(modelReference,'modelReference');
     const { did, type, message}=req.body;
     if(!did||!type||!message){
       return res.status(400).json({
@@ -2405,5 +2492,6 @@ module.exports = {
   getCrashOccurrenceByLogMsg,
   getErrorCountByVersion,
   createEvents,
-  getLogsById
+  getLogsById,
+  getAllEvents
 };

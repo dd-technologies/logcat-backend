@@ -10,7 +10,7 @@ const { registerDevice, getAllRegisteredDevice, getRegisterDeviceById
 
 
 
-router.post('/RegisterDevice',
+router.patch('/RegisterDevice',
     body('DeviceId').notEmpty(),
     body('IMEI_NO').notEmpty(),
     body('Hospital_Name').notEmpty(),
