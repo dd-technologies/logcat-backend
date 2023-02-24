@@ -13,7 +13,7 @@
             }
         }
         
-        const ventilatorpr_collectionSchema = new mongoose.Schema(
+        const ventilatoradvance_collectionSchema = new mongoose.Schema(
             {
                 version: {
                     type: String,
@@ -24,18 +24,22 @@
                   enum: ["001","002"],
                   required: [true, "Atleast one model required."]
                 },
-                device:device,
-                 },
-
+                device:{ type:String, 
+                  ref: 'did' },
+                log:logs,
+                // state:{
+                //   type:String,
+                //   required:[true,"state is required"]
+                // },
                 
-                
-            
+            },
+         
             schemaOptions
         )
 
-        ventilatorpr_collectionSchema.index({'type': 1})
+        ventilatoradvance_collectionSchema.index({'type': 1})
                 
-        const ventilatorpr_collection = mongoose.model('ventilatorpr_collection', ventilatorpr_collectionSchema)
+        const ventilatoradvance_collection = mongoose.model('ventilatoradvance_collection', ventilatoradvance_collectionSchema)
         
-        module.exports = ventilatorpr_collection
+        module.exports = ventilatoradvance_collection
         

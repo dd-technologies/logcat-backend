@@ -10,6 +10,7 @@ const logsSchema = mongoose.Schema(
     date: {
       type: Date,
       required: [true, "Log date is required."],
+      default: Date.now()
     },
     message: {
       type: String,

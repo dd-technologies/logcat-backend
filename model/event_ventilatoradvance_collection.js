@@ -11,7 +11,7 @@
             }
         }
         
-        const alert_ventilatorprosgrtfg_collectionSchema = new mongoose.Schema(
+        const event_ventilatoradvance_collectionSchema = new mongoose.Schema(
             {
               did:  {
                 type: String,
@@ -30,24 +30,33 @@
                   enum: ["001","002"],
                   required: [true, "Atleast one model required."]
                 },
-                ack:{
-                    msg: String,
-                    code: {
-                      type: String,
-                      required: [true, 'Code is required']
-                    },
-                    date: {
-                      type: Date,
-                      required: [true, 'Date time is required']
-                    }
-                  }
+                // ack:{
+                //     msg: String,
+                //     code: {
+                //       type: String,
+                //       required: [true, 'Code is required']
+                //     },
+                //     date: {
+                //       type: Date,
+                //       required: [true, 'Date time is required']
+                //     }
+                //   }
+                message:{
+                  type:String,
+                  required:[true,"message is required"]
+                },
+                date:{
+                  type:Date,
+                  required:[true,"Date time is required"]
+                },
+              
             },
             schemaOptions
         )
 
-        alert_ventilatorprosgrtfg_collectionSchema.index({'type': 1})
+        event_ventilatoradvance_collectionSchema.index({'type': 1})
                 
-        const alert_ventilatorprosgrtfg_collection = mongoose.model('alert_ventilatorprosgrtfg_collection', alert_ventilatorprosgrtfg_collectionSchema)
+        const event_ventilatoradvance_collection = mongoose.model('event_ventilatoradvance_collection', event_ventilatoradvance_collectionSchema)
         
-        module.exports = alert_ventilatorprosgrtfg_collection
+        module.exports = event_ventilatoradvance_collection
         

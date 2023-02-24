@@ -11,7 +11,7 @@
             }
         }
         
-        const event_ventilatorpro_collectionSchema = new mongoose.Schema(
+        const alert_ventilatoradvance_collectionSchema = new mongoose.Schema(
             {
               did:  {
                 type: String,
@@ -30,28 +30,35 @@
                   enum: ["001","002"],
                   required: [true, "Atleast one model required."]
                 },
-                // ack:{
-                //     msg: String,
-                //     code: {
-                //       type: String,
-                //       required: [true, 'Code is required']
-                //     },
-                //     date: {
-                //       type: Date,
-                //       required: [true, 'Date time is required']
-                //     }
-                //   }
-                message:{
+                ack:{
+                    msg: String,
+                    code: {
+                      type: String,
+                      required: [true, 'Code is required']
+                    },
+                    date: {
+                      type: Date,
+                      required: [true, 'Date time is required']
+                    }
+                },
+                priority:{
                   type:String,
-                  required:[true,"message is required"]
-                }
+                  required:[true,'priority is required']
+                },
+                // date:{
+                //   type:Date,
+                //   required:[true,'Date time is required']
+                // },
+               
+
+
             },
             schemaOptions
         )
 
-        event_ventilatorpro_collectionSchema.index({'type': 1})
+        alert_ventilatoradvance_collectionSchema.index({'type': 1})
                 
-        const event_ventilatorpro_collection = mongoose.model('event_ventilatorpro_collection', event_ventilatorpro_collectionSchema)
+        const alert_ventilatoradvance_collection = mongoose.model('alert_ventilatoradvance_collection', alert_ventilatoradvance_collectionSchema)
         
-        module.exports = event_ventilatorpro_collection
+        module.exports = alert_ventilatoradvance_collection
         

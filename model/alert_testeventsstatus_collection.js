@@ -11,7 +11,7 @@
             }
         }
         
-        const alert_ventilatorpr_collectionSchema = new mongoose.Schema(
+        const alert_testeventsstatus_collectionSchema = new mongoose.Schema(
             {
               did:  {
                 type: String,
@@ -40,14 +40,28 @@
                       type: Date,
                       required: [true, 'Date time is required']
                     }
-                  }
+                },
+                priority:{
+                  type:String,
+                  required:[true,'priority is required']
+                },
+                date:{
+                  type:Date,
+                  required:[true,'Date time is required']
+                },
+                state:{
+                  type:String,
+                  required:[true,'state is required']
+                }
+
+
             },
             schemaOptions
         )
 
-        alert_ventilatorpr_collectionSchema.index({'type': 1})
+        alert_testeventsstatus_collectionSchema.index({'type': 1})
                 
-        const alert_ventilatorpr_collection = mongoose.model('alert_ventilatorpr_collection', alert_ventilatorpr_collectionSchema)
+        const alert_testeventsstatus_collection = mongoose.model('alert_testeventsstatus_collection', alert_testeventsstatus_collectionSchema)
         
-        module.exports = alert_ventilatorpr_collection
+        module.exports = alert_testeventsstatus_collection
         

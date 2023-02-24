@@ -4,13 +4,15 @@ const router = express.Router();
 // const {
 //     isAuth
 // } = require('../middleware/authMiddleware');
-const { registerDevice, getAllRegisteredDevice, getRegisterDeviceById 
+const { registerDevice, getAllRegisteredDevice,
+     getRegisterDeviceById,
+    // UpdateRegisterDeviceDetails
 } = require("../controller/RegisterDevice");
 
 
 
 
-router.patch('/RegisterDevice',
+router.post('/RegisterDevice',
     body('DeviceId').notEmpty(),
     body('IMEI_NO').notEmpty(),
     body('Hospital_Name').notEmpty(),
@@ -19,6 +21,7 @@ router.patch('/RegisterDevice',
     body('Doctor_Name').notEmpty(),
     registerDevice);
 router.get('/',getAllRegisteredDevice) 
-router.get('/DeviceById/:did',getRegisterDeviceById)   
+router.get('/DeviceById/:did',getRegisterDeviceById);
+//router.put('/Update/:did',UpdateRegisterDeviceDetails)   
 
 module.exports = router; 

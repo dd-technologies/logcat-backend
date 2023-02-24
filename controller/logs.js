@@ -2,10 +2,13 @@ const fs = require('fs');
 const Projects = require('../model/project');
 //const logs=require('../model/project')
 //const RegisterDevice=require('../model/RegisterDevice')
-const alert_ventilatortesting_collection=require('../model/alert_ventilatortesting_collection');
-const ventilatorprre_collection=require('../model/ventilatorprre_collection');
+const alert_ventilatortesting_collection = require('../model/alert_ventilatortesting_collection');
+const ventilatortesting_collection=require('../model/ventilatortesting_collection');
+//const ventilatorprre_collection = require('../model/ventilatorprre_collection');
+//const event_testdate_collection=require('../model/event_testdate_collection');
 //const event_agvapro_collection=require('../model/event_agvapro_collection');
-const event_ventilator_collection=require('../model/event_ventilator_collection')
+//const event_ventilator_collection = require('../model/event_ventilator_collection')
+const event_ventilatoradvance_collection=require('../model/event_ventilatoradvance_collection');
 const { getDaysArray } = require('../helper/helperFunctions');
 const Device = require('../model/device');
 const Email = require('../utils/email');
@@ -42,7 +45,7 @@ const createLogs = async (req, res) => {
     }
 
     const collectionName = findProjectWithCode.collection_name;
-   // console.log(collectionName,'collectionName')
+    // console.log(collectionName,'collectionName')
 
     const modelReference = require(`../model/${collectionName}`);
     //console.log(modelReference,'modelReference')
@@ -92,39 +95,42 @@ const createLogs = async (req, res) => {
     //console.log(log.date);
 
     // console.log(log.date.grt)
-    const d=log.date;
+   // const d = log.date;
     //console.log(d);
-   // const dt=new Date(d);
+    // const dt=new Date(d);
     //console.log(dt.getHours());
 
     // console.log(d);
     // let hour = d.getHours();
     // console.log(hour);
-    const pickedDate=d.replace(/- /g," ");
-    const todayDate=new Date();
-    todayDate.setHours(0,0,0,0);
-    dateDiff=Math.abs(Number(todayDate)-pickedDate);
-    if(dateDiff>86400000){
-      log.state='active'
-    }
-    else{
-      log.state='inactive'
-    }
+    // const pickedDate = d.replace(/- /g, " ");
+    // const todayDate = new Date();
+    // todayDate.setHours(0, 0, 0, 0);
+    // dateDiff = Math.abs(Number(todayDate) - pickedDate);
+    // if (dateDiff > 86400000) {
+    //   log.state = 'active'
+    // }
+    // else {
+    //   log.state = 'inactive'
+    // }
+    console.log(log.date,'log.date');
+    
 
 
     const putDataIntoLoggerDb = await new modelReference({
-   
+
       version: version,
       type: type,
-      device: isDeviceSaved.did,    //make changes here for save device_id in database
+      device: isDeviceSaved._id,    //make changes here for save device_id in database
       log: {
         file: log.file,
         date: log.date,
         message: decodeURI(log.msg),
         type: log.type,
       },
-       state:log.state,
+      
     });
+    console.log(log.date,'log.date');
 
     const isLoggerSaved = await putDataIntoLoggerDb.save(putDataIntoLoggerDb);
 
@@ -284,11 +290,11 @@ const createLogsV2 = async (req, res) => {
 
           sentEmails.length
             ? sentEmails.map((sentEmail) => {
-                sentEmailErrArr.push(sentEmail.status);
-                if (sentEmail.status === 'rejected') {
-                  sentEmailErrMsgArr.push(sentEmail.reason.message);
-                }
-              })
+              sentEmailErrArr.push(sentEmail.status);
+              if (sentEmail.status === 'rejected') {
+                sentEmailErrMsgArr.push(sentEmail.reason.message);
+              }
+            })
             : sentEmailErrArr,
             (sentEmailErrMsgArr = []);
         }
@@ -299,14 +305,14 @@ const createLogsV2 = async (req, res) => {
             crashEmail:
               log.type === 'error'
                 ? {
-                    status: sentEmailErrArr.includes('rejected') ? 0 : 1,
-                    errMsg: sentEmailErrMsgArr.length
-                      ? sentEmailErrMsgArr.join(' | ')
-                      : '',
-                    msg: sentEmailErrMsgArr.length
-                      ? `Error sending ${sentEmailErrMsgArr.length} out of ${sentEmails.length} log(s)`
-                      : 'Email(s) sent successfully.',
-                  }
+                  status: sentEmailErrArr.includes('rejected') ? 0 : 1,
+                  errMsg: sentEmailErrMsgArr.length
+                    ? sentEmailErrMsgArr.join(' | ')
+                    : '',
+                  msg: sentEmailErrMsgArr.length
+                    ? `Error sending ${sentEmailErrMsgArr.length} out of ${sentEmails.length} log(s)`
+                    : 'Email(s) sent successfully.',
+                }
                 : {},
           },
           message: 'Successful',
@@ -429,11 +435,11 @@ const createLogsV2 = async (req, res) => {
 
           sentEmails.length
             ? sentEmails.map((sentEmail) => {
-                sentEmailErrArr.push(sentEmail.status);
-                if (sentEmail.status === 'rejected') {
-                  sentEmailErrMsgArr.push(sentEmail.reason.message);
-                }
-              })
+              sentEmailErrArr.push(sentEmail.status);
+              if (sentEmail.status === 'rejected') {
+                sentEmailErrMsgArr.push(sentEmail.reason.message);
+              }
+            })
             : sentEmailErrArr,
             (sentEmailErrMsgArr = []);
         }
@@ -456,18 +462,18 @@ const createLogsV2 = async (req, res) => {
           data: {
             crashEmail: sentEmails.length
               ? {
-                  status:
-                    sentEmailErrArr.length &&
+                status:
+                  sentEmailErrArr.length &&
                     sentEmailErrArr.includes('rejected')
-                      ? 0
-                      : 1,
-                  errMsg: sentEmailErrMsgArr.length
-                    ? sentEmailErrMsgArr.join(' | ')
-                    : '',
-                  msg: sentEmailErrMsgArr.length
-                    ? `Error sending ${sentEmailErrMsgArr.length} out of ${sentEmails.length} log(s)`
-                    : 'Email(s) sent successfully.',
-                }
+                    ? 0
+                    : 1,
+                errMsg: sentEmailErrMsgArr.length
+                  ? sentEmailErrMsgArr.join(' | ')
+                  : '',
+                msg: sentEmailErrMsgArr.length
+                  ? `Error sending ${sentEmailErrMsgArr.length} out of ${sentEmails.length} log(s)`
+                  : 'Email(s) sent successfully.',
+              }
               : {},
           },
           message: 'Successful',
@@ -488,12 +494,13 @@ const createLogsV2 = async (req, res) => {
     });
   }
 };
-const getAlertsById=async(req,res)=>{
-  try{
-    const{did}=req.params;
-    const findDeviceById=await alert_ventilatortesting_collection.find({did:did});
 
-    console.log(findDeviceById,'findDeviceById');
+const getAlertsById = async (req, res) => {
+  try {
+    const { did } = req.params;
+    const findDeviceById = await alert_ventilatortesting_collection.find({ did: did });
+
+    console.log(findDeviceById, 'findDeviceById');
     if (!findDeviceById) {
       return res.status(404).json({
         status: 0,
@@ -510,15 +517,15 @@ const getAlertsById=async(req,res)=>{
     // const collectionName=require(`../model/${findDeviceById.collection_name}.js`);
     // console.log(collectionName,'collectionName');
     return res.status(200).json({
-      status:1,
-      data:{
-        findDeviceById:findDeviceById
+      status: 1,
+      data: {
+        findDeviceById: findDeviceById
       },
-      message:'successfull'
+      message: 'successfull'
     });
 
   }
-  catch(err){
+  catch (err) {
     return res.status(500).json({
       status: -1,
       data: {
@@ -534,41 +541,41 @@ const getAlertsById=async(req,res)=>{
 
   }
 }
-const getLogsById=async(req,res)=>{
-  try{
-    const{device}=req.params;
-    const findDeviceById=await ventilatorprre_collection.find({did:device});
-    if(!findDeviceById){
+const getLogsById = async (req, res) => {
+  try {
+    const { device } = req.params;
+    const findDeviceById = await ventilatortesting_collection.find({ did: device });
+    if (!findDeviceById) {
       return res.status(404).json({
-        status:0,
-        data:{
-          err:{
-            generatedTime:newDate(),
-            errMsg:'device not found',
-            msg:'device not found',
-            type:'client Error',
+        status: 0,
+        data: {
+          err: {
+            generatedTime: newDate(),
+            errMsg: 'device not found',
+            msg: 'device not found',
+            type: 'client Error',
           },
         },
       });
     }
     return res.status(200).json({
-      status:1,
-      data:{
-        findDeviceById:findDeviceById
+      status: 1,
+      data: {
+        findDeviceById: findDeviceById
       },
-      message:'successfull'
+      message: 'successfull'
     });
 
   }
-  catch(err){
+  catch (err) {
     return res.status(500).json({
-      status:-1,
-      data:{
-        err:{
-          generatedTime:newDate(),
-          errMsg:err.stack,
-          msg:err.message,
-          type:err.name,
+      status: -1,
+      data: {
+        err: {
+          generatedTime: newDate(),
+          errMsg: err.stack,
+          msg: err.message,
+          type: err.name,
         },
 
       },
@@ -576,12 +583,47 @@ const getLogsById=async(req,res)=>{
   }
 
 }
-const getEventsById=async(req,res)=>{
-  try{
-    const{did}=req.params;
-    const findDeviceById=await event_agvapro_collection.find({did:did});
+const getEventsById = async (req, res) => {
+  try {
+    const { did } = req.params;
+    const findDeviceById = await event_ventilatoradvance_collection.find({ did: did });
+    // console.log(findDeviceById,'findDeviceById');
+    // let dt1=findDeviceById.map(a=>a.date);
+    
+    
 
-    console.log(findDeviceById,'findDeviceById');
+    // console.log(findDeviceById[0].date);
+    const maxDate = new Date(
+      Math.max(
+        ...findDeviceById.map(element => {
+          return new Date(element.date);
+        }),
+      ),
+    );
+    console.log(maxDate);  
+    const dt1 = new Date(maxDate);
+    //console.log(dt1)
+    const dt2 = new Date();
+   // dt=new Date(maxDate);
+    //dt=new Date();
+    var diff = (dt2.getTime() - dt1.getTime()) / 1000;
+    diff = Math.trunc(Math.abs(diff / (60 * 60)));
+    //console.log(diff)
+    if (diff >= 24) {
+      console.log(state = 'inactive');
+    }
+    else {
+      console.log(state = 'active');
+    }
+
+    // const dt1=await findDeviceById.find(date);
+    // console.log(dt1);
+    // dt1=event_testdate_collection.date;
+    // console.log(dt1);
+
+
+
+    //console.log(findDeviceById, 'findDeviceById');
     if (!findDeviceById) {
       return res.status(404).json({
         status: 0,
@@ -598,15 +640,17 @@ const getEventsById=async(req,res)=>{
     // const collectionName=require(`../model/${findDeviceById.collection_name}.js`);
     // console.log(collectionName,'collectionName');
     return res.status(200).json({
-      status:1,
-      data:{
-        findDeviceById:findDeviceById
+      status: 1,
+      data: {
+        findDeviceById: findDeviceById
       },
-      message:'successfull'
+      message: 'successfull',
+      //state:findDeviceById.find().sort({date:-1}).limit(1)
+      state:state
     });
 
   }
-  catch(err){
+  catch (err) {
     return res.status(500).json({
       status: -1,
       data: {
@@ -624,9 +668,11 @@ const getEventsById=async(req,res)=>{
 }
 const getAllEvents = async (req, res) => {
   try {
-    
-    const allEvents= await event_ventilator_collection.find();
+
+    const allEvents = await event_ventilatoradvance_collection.find();
     //console.log(allEvents);
+
+    
     return res.status(200).json({
       status: 1,
       data: { data: allEvents},
@@ -657,7 +703,7 @@ const createAlerts = async (req, res, next) => {
   try {
     const { project_code } = req.params;
     // check project exist or not
-    const findProjectWithCode = await Projects.findOne({ code: project_code }).sort({_id:-1});
+    const findProjectWithCode = await Projects.findOne({ code: project_code }).sort({ _id: -1 });
 
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -693,43 +739,63 @@ const createAlerts = async (req, res, next) => {
       });
     }
     const collectionName = findProjectWithCode.alert_collection_name;
-   // console.log(collectionName,'collectionName---')
+    // console.log(collectionName,'collectionName---')
     const modelReference = require(`../model/${collectionName}`);
-    
-  //  console.log(modelReference)
 
-    const { did, type, ack,priority } = req.body;
+    //  console.log(modelReference)
+
+    const { did, type, ack, priority, date } = req.body;
     // const d=ac.date
     // console.log(d);
     // console.log('type', type);
 
-    let arrayOfObjects = [];
-    for (let i = 0; i < ack.length; i++) {
-      arrayOfObjects.push(ack[i]);
-    }
-//     // console.log(arrayOfObjects)
-//     // const d=ack[2];
-//     // console.log(d);
-
-// // SimpleDateFormat inFormat = new SimpleDateFormat("dd-MMM-yyyy");
-//     let result=ack.map(a=>a.timestamp);
-//     let d=Date.parse(result);
-//     console.log(d);
-
-//     // console.log(result);
-//     // let d=result.toString();
-//     // console.log(d)
-//     // let d1=Date.parse(d);
-    
-
-//     // console.log(d)
+    // let arrayOfObjects = [];
+    // for (let i = 0; i < ack.length; i++) {
+    //   arrayOfObjects.push(ack[i]);
+    // }
+    // //console.log(date);
+    // var dt1 = new Date(date);
+    // //console.log(dt1)
+    // let dt2 = new Date();
+    // //console.log(dt2);
+    // var diff = (dt2.getTime() - dt1.getTime()) / 1000;
+    // diff = Math.trunc(Math.abs(diff / (60 * 60)));
+    // //console.log(diff)
+    // if (diff >= 24) {
+    //   state = 'inactive';
+    // }
+    // else {
+    //   state = 'active';
+    // }
 
 
-//     let todayDate=new Date();
-//     var diff=(todayDate.getTime()-d.getTime())/1000;
-//     diff=diff/(60*60);
-//     console.log(diff);
-    
+
+
+    //console.log(date,'generated date ')
+    //     // console.log(arrayOfObjects)
+    //     // const d=ack[2];
+    //     // console.log(d);
+
+    // // SimpleDateFormat inFormat = new SimpleDateFormat("dd-MMM-yyyy");
+    //     let result=ack.map(a=>a.timestamp);
+    //     let d=Date.parse(result);
+    //     console.log(d);
+
+    //     // console.log(result);
+    //     // let d=result.toString();
+    //     // console.log(d)
+    //     // let d1=Date.parse(d);
+
+
+    //     // console.log(d)
+
+
+    //     let todayDate=new Date();
+    //     var diff=(todayDate.getTime()-d.getTime())/1000;
+    //     diff=diff/(60*60);
+    //     console.log(diff);
+    // console.log(did,"did of alerts");
+
 
 
     let dbSavePromise = ack.map(async (ac) => {
@@ -741,7 +807,10 @@ const createAlerts = async (req, res, next) => {
           date: ac.timestamp,
         },
         type: type,
-        priority:priority
+        priority: priority,
+        date: date
+        //state: state
+
       });
 
       return putDataIntoLoggerDb.save(putDataIntoLoggerDb);
@@ -792,10 +861,10 @@ const createAlerts = async (req, res, next) => {
     });
   }
 };
-const createEvents= async(req,res,next)=>{
-  try{
+const createEvents = async (req, res, next) => {
+  try {
 
-    const{project_code}=req.params;
+    const { project_code } = req.params;
     const findProjectWithCode = await Projects.findOne({ code: project_code });
     //console.log(findProjectWithCode,'findProjectWithProjectCode----')
 
@@ -818,7 +887,7 @@ const createEvents= async(req,res,next)=>{
         },
       });
     }
-    if(!findProjectWithCode){
+    if (!findProjectWithCode) {
       return res.status(404).json({
         status: 0,
         data: {
@@ -832,14 +901,14 @@ const createEvents= async(req,res,next)=>{
       });
     }
 
-    
-  
+
+
     const collectionName = findProjectWithCode.event_collection_name;
-   //console.log(collectionName,'collectionName-----')
+    //console.log(collectionName,'collectionName-----')
     const modelReference = require(`../model/${collectionName}`);
     //console.log(modelReference,'modelReference');
-    const { did, type, message}=req.body;
-    if(!did||!type||!message){
+    const { did, type, message,date} = req.body;
+    if (!did || !type || !message|| !date) {
       return res.status(400).json({
         status: 0,
         data: {
@@ -851,19 +920,21 @@ const createEvents= async(req,res,next)=>{
           },
         },
       });
-      
+
     }
-    const events=await new modelReference({
-      did:did,
-      message:message,
-      type:type
+    const events = await new modelReference({
+      did: did,
+      message: message,
+      type: type,
+      date:date
     });
-    const SaveEvents=await events.save(events);
-    if(SaveEvents){
+    const SaveEvents = await events.save(events);
+    if (SaveEvents) {
       res.status(201).json({
         status: 1,
-        //data: { DeviceId: savedDevice.DeviceId, Hospital_Name: savedDevice.Hospital_Name},
+        data: { eventCounts: SaveEvents.length },
         message: 'Event add!',
+
       });
     }
     else {
@@ -877,7 +948,7 @@ const createEvents= async(req,res,next)=>{
             type: 'MongodbError',
           },
         },
-      });I
+      }); I
     }
     // let dbSavePromise = ack.map(async (ac) => {
     //   const putDataIntoLoggerDb = await new modelReference({
@@ -926,21 +997,22 @@ const createEvents= async(req,res,next)=>{
     //     },
     //   });
     // }
-    
+
 
   }
-  catch(err){ return res.status(500).json({
-    status: -1,
-    data: {
-      err: {
-        generatedTime: new Date(),
-        errMsg: err.stack,
-        msg: err.message,
-        type: err.name,
+  catch (err) {
+    return res.status(500).json({
+      status: -1,
+      data: {
+        err: {
+          generatedTime: new Date(),
+          errMsg: err.stack,
+          msg: err.message,
+          type: err.name,
+        },
       },
-    },
-  });
-}
+    });
+  }
 };
 
 
@@ -984,6 +1056,7 @@ const getFilteredLogs = async (req, res) => {
     }
 
     const collectionName = require(`../model/${isProjectExist.collection_name}.js`);
+    console.log(collectionName,'collectionName');
 
     let dt = new Date(req.query.endDate);
     dt.setDate(dt.getDate() + 1);
@@ -1131,7 +1204,8 @@ const getAlertsWithFilter = async (req, res) => {
     let page = parseInt(req.query.page) || 1;
     let limit = parseInt(req.query.limit) || 500;
     let skip = (page - 1) * limit;
-    console.log(sortOperator);
+    //console.log(sortOperator);
+    
     const data = await collectionName.aggregate([
       {
         $facet: {
@@ -1150,6 +1224,7 @@ const getAlertsWithFilter = async (req, res) => {
         },
       },
     ]);
+    //console.log(data,'data');
 
     return res.status(200).json({
       status: 1,
@@ -1311,7 +1386,7 @@ const crashFreeUsersDatewise = async (req, res) => {
       });
     }
     const collectionName = require(`../model/${projectCollection.collection_name}.js`);
-    console.log('collectionName',collectionName)
+    console.log('collectionName', collectionName)
 
     let dt = new Date(req.query.endDate);
     dt.setDate(dt.getDate() + 1);
@@ -1754,7 +1829,7 @@ const getLogsByLogType = async (req, res) => {
     }
 
     const collectionName = require(`../model/${isProjectExist.collection_name}.js`);
-    console.log(collectionName,'collectionName')
+    console.log(collectionName, 'collectionName')
 
     let dt = new Date(req.query.endDate);
     dt.setDate(dt.getDate() + 1);

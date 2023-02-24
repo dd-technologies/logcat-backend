@@ -31,7 +31,12 @@ const RegisterDeviceSchema = mongoose.Schema({
     Doctor_Name:{
         required:[true,"Doctor Name is required"],
         type:String
-    }
+    },
+    devices: {
+        type: [mongoose.Schema.Types.ObjectId],
+        ref: "event_ventilatoradvance_collection"
+      },
+    
 
     
 
@@ -39,7 +44,7 @@ const RegisterDeviceSchema = mongoose.Schema({
  
 }, {timestamps: true})
 
-const RegisterDevice = mongoose.model('ResisterDevice',RegisterDeviceSchema)
+const RegisterDevice = mongoose.model('RegisterDevice',RegisterDeviceSchema)
 
 
 module.exports = RegisterDevice

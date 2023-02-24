@@ -11,7 +11,7 @@
             }
         }
         
-        const alert_ventilatorfinalone_collectionSchema = new mongoose.Schema(
+        const event_testeventsstatus_collectionSchema = new mongoose.Schema(
             {
               did:  {
                 type: String,
@@ -30,24 +30,28 @@
                   enum: ["001","002"],
                   required: [true, "Atleast one model required."]
                 },
-                ack:{
-                    msg: String,
-                    code: {
-                      type: String,
-                      required: [true, 'Code is required']
-                    },
-                    date: {
-                      type: Date,
-                      required: [true, 'Date time is required']
-                    }
-                  }
+                // ack:{
+                //     msg: String,
+                //     code: {
+                //       type: String,
+                //       required: [true, 'Code is required']
+                //     },
+                //     date: {
+                //       type: Date,
+                //       required: [true, 'Date time is required']
+                //     }
+                //   }
+                message:{
+                  type:String,
+                  required:[true,"message is required"]
+                }
             },
             schemaOptions
         )
 
-        alert_ventilatorfinalone_collectionSchema.index({'type': 1})
+        event_testeventsstatus_collectionSchema.index({'type': 1})
                 
-        const alert_ventilatorfinalone_collection = mongoose.model('alert_ventilatorfinalone_collection', alert_ventilatorfinalone_collectionSchema)
+        const event_testeventsstatus_collection = mongoose.model('event_testeventsstatus_collection', event_testeventsstatus_collectionSchema)
         
-        module.exports = alert_ventilatorfinalone_collection
+        module.exports = event_testeventsstatus_collection
         

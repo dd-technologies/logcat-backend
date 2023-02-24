@@ -167,7 +167,12 @@ const createNewProject = async (req, res) => {
                 priority:{
                   type:String,
                   required:[true,'priority is required']
-                }
+                },
+                // date:{
+                //   type:Date,
+                //   required:[true,'Date time is required']
+                // },
+               
 
 
             },
@@ -251,7 +256,12 @@ const createNewProject = async (req, res) => {
                 message:{
                   type:String,
                   required:[true,"message is required"]
-                }
+                },
+                date:{
+                  type:Date,
+                  required:[true,"Date time is required"]
+                },
+              
             },
             schemaOptions
         )
@@ -319,10 +329,10 @@ const createNewProject = async (req, res) => {
                 device:{ type:String, 
                   ref: 'did' },
                 log:logs,
-                state:{
-                  type:String,
-                  required:[true,"state is required"]
-                },
+                // state:{
+                //   type:String,
+                //   required:[true,"state is required"]
+                // },
                 
             },
          

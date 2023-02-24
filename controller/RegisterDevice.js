@@ -5,7 +5,7 @@ const registerDevice = async (req, res) => {
     try {
       const { DeviceId,AliasName, IMEI_NO, Hospital_Name,Ward_No,Ventilator_Operator,Doctor_Name } = req.body;
       const DeviceIdTaken = await RegisterDevice.findOne({ DeviceId:DeviceId }).sort({'DeviceId':-1});
-      const AliasNameTaken=await RegisterDevice.findOne({AliasName:AliasName});
+     const AliasNameTaken=await RegisterDevice.findOne({AliasName:AliasName});
   
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -120,7 +120,8 @@ const registerDevice = async (req, res) => {
   };
   const getAllRegisteredDevice = async (req, res) => {
     try {
-      const allRegisteredDevice= await RegisterDevice .find().sort({'_id':-1});
+      const allRegisteredDevice= await RegisterDevice .find().sort({'_id':-1})
+      
       return res.status(200).json({
         status: 1,
         data: { data: allRegisteredDevice},
@@ -140,6 +141,36 @@ const registerDevice = async (req, res) => {
       });
     }
   };
+  // const UpdateRegisterDeviceDetails=async(req,res)=>{
+  //   try{
+  //     const{did}=req.param;
+  //     const UpdateRegisterDevice=await RegisterDevice.findOne({deviceId:did},
+  //       {$set:{ DeviceId,AliasName, IMEI_NO, Hospital_Name,Ward_No,Ventilator_Operator,Doctor_Name } = req.body
+  //     });
+  //     res.status(201).json({
+  //       status: 1,
+  //       data: {UpdateRegisterDevice},
+  //       message: 'Updated successfully!',
+  //     });
+      
+      
+
+  //   }
+  //   catch(err){
+  //     return res.status(500).json({
+  //       status: -1,
+  //       data: {
+  //         err: {
+  //           generatedTime: new Date(),
+  //           errMsg: err.stack,
+  //           msg: err.message,
+  //           type: err.name,
+  //         },
+  //       },
+
+  //     });
+  //   }
+  // };
 
   const getRegisterDeviceById=async(req,res)=>{
     try {
@@ -203,5 +234,6 @@ const registerDevice = async (req, res) => {
   module.exports={
     registerDevice, 
     getAllRegisteredDevice,
-    getRegisterDeviceById
+    getRegisterDeviceById,
+    //UpdateRegisterDeviceDetails
   }
