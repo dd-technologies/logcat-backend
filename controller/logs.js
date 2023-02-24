@@ -448,7 +448,262 @@ const createLogsV2 = async (req, res) => {
 /**
  * desc     Alert
  * api      POST @/api/logger/logs/alerts/:projectCode
+ * 
  */
+ const createEvents = async (req, res, next) => {
+  try {
+
+    const { project_code } = req.params;
+    const findProjectWithCode = await Projects.findOne({ code: project_code });
+    //console.log(findProjectWithCode,'findProjectWithProjectCode----')
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        status: 0,
+        data: {
+          err: {
+            generatedTime: new Date(),
+            errMsg: errors
+              .array()
+              .map((err) => {
+                return `${err.msg}: ${err.param}`;
+              })
+              .join(' | '),
+            msg: 'Invalid data entered.',
+            type: 'ValidationError',
+          },
+        },
+      });
+    }
+    if (!findProjectWithCode) {
+      return res.status(404).json({
+        status: 0,
+        data: {
+          err: {
+            generatedTime: new Date(),
+            errMsg: 'Project does not exist',
+            msg: 'Project does not exist',
+            type: 'MongoDb Error',
+          },
+        },
+      });
+    }
+
+
+
+    const collectionName = findProjectWithCode.event_collection_name;
+    //console.log(collectionName,'collectionName-----')
+    const modelReference = require(`../model/${collectionName}`);
+    //console.log(modelReference,'modelReference');
+    const { did, type, message,date} = req.body;
+    if (!did || !type || !message|| !date) {
+      return res.status(400).json({
+        status: 0,
+        data: {
+          err: {
+            generatedTime: new Date(),
+            errMsg: 'Please fill all the details.',
+            msg: 'Please fill all the details.',
+            type: 'Client Error',
+          },
+        },
+      });
+
+    }
+    const events = await new modelReference({
+      did: did,
+      message: message,
+      type: type,
+      date:date
+    });
+    const SaveEvents = await events.save(events);
+    if (SaveEvents) {
+      res.status(201).json({
+        status: 1,
+        //data: { DeviceId: savedDevice.DeviceId, Hospital_Name: savedDevice.Hospital_Name},
+        message: 'Event add!',
+      });
+    }
+    else {
+      res.status(500).json({
+        status: 0,
+        data: {
+          err: {
+            generatedTime: new Date(),
+            errMsg: 'Some error happened during registration',
+            msg: 'Some error happened during registration',
+            type: 'MongodbError',
+          },
+        },
+      }); I
+    }
+    // let dbSavePromise = ack.map(async (ac) => {
+    //   const putDataIntoLoggerDb = await new modelReference({
+    //     did: did,
+    //     // ack: {
+    //     //   msg: ac.msg,
+    //     //   code: ac.code,
+    //     //   date: ac.timestamp,
+    //     // },
+    //     message:message,
+
+    //     type: type,
+    //   });
+
+    //   return putDataIntoLoggerDb.save(putDataIntoLoggerDb);
+    // });
+
+    // let events = await Promise.allSettled(dbSavePromise);
+
+    // var eventsErrArr = [];
+    // var eventsErrMsgArr = [];
+
+    // events.map((events) => {
+    //   eventsErrArr.push(events.status);
+    //   if (events.status === 'rejected') {
+    //     eventsErrMsgArr.push(events.reason.message);
+    //   }
+    // });
+
+    // if (!eventsErrArr.includes('rejected')) {
+    //   return res.status(201).json({
+    //     status: 1,
+    //     data: { eventsCount: events.length },
+    //     message: 'Successful',
+    //   });
+    // } else {
+    //   res.status(400).json({
+    //     status: eventsErrArr.length === events.length ? -1 : 0,
+    //     data: {
+    //       err: {
+    //         generatedTime: new Date(),
+    //         errMsg: eventsErrMsgArr.join(' | '),
+    //         msg: `Error saving ${eventsErrMsgArr.length} out of ${events.length} events(s)`,
+    //         type: 'ValidationError',
+    //       },
+    //     },
+    //   });
+    // }
+
+
+  }
+  catch (err) {
+    return res.status(500).json({
+      status: -1,
+      data: {
+        err: {
+          generatedTime: new Date(),
+          errMsg: err.stack,
+          msg: err.message,
+          type: err.name,
+        },
+      },
+    });
+  }
+};
+
+const getEventsWithFilter = async (req, res) => {
+  try {
+    const { projectCode } = req.params;
+
+    if (!req.query.projectType) {
+      return res.status(400).json({
+        status: 0,
+        data: {
+          err: {
+            generatedTime: new Date(),
+            errMsg: 'Project type is required',
+            msg: 'Project type is required',
+            type: 'Client Error',
+          },
+        },
+      });
+    }
+
+    const isProjectExist = await Projects.findOne({ code: projectCode });
+    if (!isProjectExist) {
+      return res.status(404).json({
+        status: 0,
+        data: {
+          err: {
+            generatedTime: new Date(),
+            errMsg: 'Project not found.',
+            msg: 'Project not found.',
+            type: 'Internal Server Error',
+          },
+        },
+      });
+    }
+
+    const collectionName = require(`../model/${isProjectExist.event_collection_name}.js`);
+
+    let dt = new Date(req.query.endDate);
+    dt.setDate(dt.getDate() + 1);
+
+    var sortOperator = { $sort: {} };
+    let sort = req.query.sort || '-createdAt';
+
+    sort.includes('-')
+      ? (sortOperator['$sort'][sort.replace('-', '')] = -1)
+      : (sortOperator['$sort'][sort] = 1);
+
+    var matchOperator = {
+      $match: {
+        createdAt: {
+          $gte: new Date(req.query.startDate),
+          $lte: dt,
+        },
+        type: req.query.projectType,
+      },
+    };
+
+    let page = parseInt(req.query.page) || 1;
+    let limit = parseInt(req.query.limit) || 500;
+    let skip = (page - 1) * limit;
+    console.log(sortOperator);
+    const data = await collectionName.aggregate([
+      {
+        $facet: {
+          totalRecords: [
+            matchOperator,
+            {
+              $count: 'total',
+            },
+          ],
+          data: [
+            matchOperator,
+            sortOperator,
+            { $skip: skip },
+            { $limit: limit },
+          ],
+        },
+      },
+    ]);
+
+    return res.status(200).json({
+      status: 1,
+      message: 'Getting all events',
+      data: {
+        count: data[0]?.totalRecords[0]?.total,
+        pageLimit: data[0]?.data.length,
+        events: data[0]?.data,
+      },
+    });
+  } catch (err) {
+    return res.status(500).json({
+      status: -1,
+      data: {
+        err: {
+          generatedTime: new Date(),
+          errMsg: err.stack,
+          msg: err.message,
+          type: err.name,
+        },
+      },
+    });
+  }
+};
 const createAlerts = async (req, res, next) => {
   try {
     const { project_code } = req.params;
@@ -2000,4 +2255,7 @@ module.exports = {
   getLogsCountWithModelName,
   getCrashOccurrenceByLogMsg,
   getErrorCountByVersion,
+  createEvents,
+
+  getEventsWithFilter,
 };

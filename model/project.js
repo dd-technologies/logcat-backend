@@ -24,7 +24,13 @@ const projectSchema = mongoose.Schema({
     alert_collection_name:{
         type:String,
         unique:true,
-        required:[true,'Alert collection name require']
+        required:[true,'Alert collection name required']
+    },
+    event_collection_name:{
+        type:String,
+        unique:true,
+        required:[true,'Event collection name required']
+
     },
     reportEmail: {
         type: [Object],
