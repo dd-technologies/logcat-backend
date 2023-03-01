@@ -2,13 +2,13 @@ const fs = require('fs');
 const Projects = require('../model/project');
 //const logs=require('../model/project')
 //const RegisterDevice=require('../model/RegisterDevice')
-const alert_ventilatortesting_collection = require('../model/alert_ventilatortesting_collection');
+const alert_ventilatortesting_collection = require('../model/alert_ventilator_collection');
 const ventilatortesting_collection=require('../model/ventilatortesting_collection');
 //const ventilatorprre_collection = require('../model/ventilatorprre_collection');
 //const event_testdate_collection=require('../model/event_testdate_collection');
 //const event_agvapro_collection=require('../model/event_agvapro_collection');
 //const event_ventilator_collection = require('../model/event_ventilator_collection')
-const event_ventilatoradvance_collection=require('../model/event_ventilatoradvance_collection');
+const event_ventilator_collection=require('../model/event_ventilator_collection');
 const { getDaysArray } = require('../helper/helperFunctions');
 const Device = require('../model/device');
 const Email = require('../utils/email');
@@ -48,7 +48,7 @@ const createLogs = async (req, res) => {
     // console.log(collectionName,'collectionName')
 
     const modelReference = require(`../model/${collectionName}`);
-    //console.log(modelReference,'modelReference')
+    console.log(modelReference,'modelReference')
 
     const { version, type, log, device } = req.body;
 
@@ -500,7 +500,7 @@ const getAlertsById = async (req, res) => {
     const { did } = req.params;
     const findDeviceById = await alert_ventilatortesting_collection.find({ did: did });
 
-    console.log(findDeviceById, 'findDeviceById');
+   // console.log(findDeviceById, 'findDeviceById');
     if (!findDeviceById) {
       return res.status(404).json({
         status: 0,
@@ -586,13 +586,14 @@ const getLogsById = async (req, res) => {
 const getEventsById = async (req, res) => {
   try {
     const { did } = req.params;
-    const findDeviceById = await event_ventilatoradvance_collection.find({ did: did });
+    const findDeviceById = await event_ventilator_collection.find({ did: did });
     // console.log(findDeviceById,'findDeviceById');
     // let dt1=findDeviceById.map(a=>a.date);
     
     
 
     // console.log(findDeviceById[0].date);
+   // console.log(findDeviceById,'findDeviceById')
     const maxDate = new Date(
       Math.max(
         ...findDeviceById.map(element => {
@@ -600,7 +601,7 @@ const getEventsById = async (req, res) => {
         }),
       ),
     );
-    console.log(maxDate);  
+   //console.log(maxDate);  
     const dt1 = new Date(maxDate);
     //console.log(dt1)
     const dt2 = new Date();
@@ -609,11 +610,11 @@ const getEventsById = async (req, res) => {
     var diff = (dt2.getTime() - dt1.getTime()) / 1000;
     diff = Math.trunc(Math.abs(diff / (60 * 60)));
     //console.log(diff)
-    if (diff >= 24) {
-      console.log(state = 'inactive');
+    if (diff >= 24||diff<0) {
+      state = 'inactive';
     }
     else {
-      console.log(state = 'active');
+     state = 'active';
     }
 
     // const dt1=await findDeviceById.find(date);
@@ -642,7 +643,7 @@ const getEventsById = async (req, res) => {
     return res.status(200).json({
       status: 1,
       data: {
-        findDeviceById: findDeviceById
+        findDeviceById: findDeviceById,
       },
       message: 'successfull',
       //state:findDeviceById.find().sort({date:-1}).limit(1)
@@ -669,7 +670,7 @@ const getEventsById = async (req, res) => {
 const getAllEvents = async (req, res) => {
   try {
 
-    const allEvents = await event_ventilatoradvance_collection.find();
+    const allEvents = await event_ventilator_collection.find();
     //console.log(allEvents);
 
     
@@ -739,7 +740,7 @@ const createAlerts = async (req, res, next) => {
       });
     }
     const collectionName = findProjectWithCode.alert_collection_name;
-    // console.log(collectionName,'collectionName---')
+     //console.log(collectionName,'collectionName---')
     const modelReference = require(`../model/${collectionName}`);
 
     //  console.log(modelReference)

@@ -124,7 +124,7 @@ const registerDevice = async (req, res) => {
       
       return res.status(200).json({
         status: 1,
-        data: { data: allRegisteredDevice},
+        data: allRegisteredDevice,
         message: 'Successful',
       });
     } catch (err) {
@@ -141,36 +141,36 @@ const registerDevice = async (req, res) => {
       });
     }
   };
-  // const UpdateRegisterDeviceDetails=async(req,res)=>{
-  //   try{
-  //     const{did}=req.param;
-  //     const UpdateRegisterDevice=await RegisterDevice.findOne({deviceId:did},
-  //       {$set:{ DeviceId,AliasName, IMEI_NO, Hospital_Name,Ward_No,Ventilator_Operator,Doctor_Name } = req.body
-  //     });
-  //     res.status(201).json({
-  //       status: 1,
-  //       data: {UpdateRegisterDevice},
-  //       message: 'Updated successfully!',
-  //     });
+  const UpdateRegisterDeviceDetails=async(req,res)=>{
+    try{
+      const{did}=req.param;
+      const UpdateRegisterDevice=await RegisterDevice.findOne({deviceId:did},
+        {$set:{ DeviceId,AliasName, IMEI_NO, Hospital_Name,Ward_No,Ventilator_Operator,Doctor_Name } = req.body
+      });
+      res.status(201).json({
+        status: 1,
+        data: {UpdateRegisterDevice},
+        message: 'Updated successfully!',
+      });
       
       
 
-  //   }
-  //   catch(err){
-  //     return res.status(500).json({
-  //       status: -1,
-  //       data: {
-  //         err: {
-  //           generatedTime: new Date(),
-  //           errMsg: err.stack,
-  //           msg: err.message,
-  //           type: err.name,
-  //         },
-  //       },
+    }
+    catch(err){
+      return res.status(500).json({
+        status: -1,
+        data: {
+          err: {
+            generatedTime: new Date(),
+            errMsg: err.stack,
+            msg: err.message,
+            type: err.name,
+          },
+        },
 
-  //     });
-  //   }
-  // };
+      });
+    }
+  };
 
   const getRegisterDeviceById=async(req,res)=>{
     try {
@@ -235,5 +235,5 @@ const registerDevice = async (req, res) => {
     registerDevice, 
     getAllRegisteredDevice,
     getRegisterDeviceById,
-    //UpdateRegisterDeviceDetails
+    UpdateRegisterDeviceDetails
   }

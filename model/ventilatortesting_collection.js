@@ -26,6 +26,7 @@
                 },
                 device:{ type:String, 
                   ref: 'did' },
+                  
                 log:logs,
                 // state:{
                 //   type:String,

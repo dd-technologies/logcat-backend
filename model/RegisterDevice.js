@@ -32,11 +32,7 @@ const RegisterDeviceSchema = mongoose.Schema({
         required:[true,"Doctor Name is required"],
         type:String
     },
-    devices: {
-        type: [mongoose.Schema.Types.ObjectId],
-        ref: "event_ventilatoradvance_collection"
-      },
-    
+
 
     
 

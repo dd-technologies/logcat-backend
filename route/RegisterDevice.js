@@ -6,7 +6,7 @@ const router = express.Router();
 // } = require('../middleware/authMiddleware');
 const { registerDevice, getAllRegisteredDevice,
      getRegisterDeviceById,
-    // UpdateRegisterDeviceDetails
+    UpdateRegisterDeviceDetails
 } = require("../controller/RegisterDevice");
 
 
@@ -22,6 +22,6 @@ router.post('/RegisterDevice',
     registerDevice);
 router.get('/',getAllRegisteredDevice) 
 router.get('/DeviceById/:did',getRegisterDeviceById);
-//router.put('/Update/:did',UpdateRegisterDeviceDetails)   
+router.put('/Update/:did',UpdateRegisterDeviceDetails)   
 
 module.exports = router; 
