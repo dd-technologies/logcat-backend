@@ -15,6 +15,11 @@
         
         const ventilator_collectionSchema = new mongoose.Schema(
             {
+                did:{
+                    type:String,
+                    requuired:[true,'did is required.']
+
+                },
                 version: {
                     type: String,
                     required: [true, 'Log version is required.']
@@ -32,7 +37,7 @@
 
         ventilator_collectionSchema.index({'type': 1})
                 
-        const ventilator_collection = mongoose.model('ventilator_collection', ventilator_collectionSchema)
+        const ventilator_collection = mongoose.model('ventilator_collection', ventilator_collectionSchema);
         
         module.exports = ventilator_collection
         

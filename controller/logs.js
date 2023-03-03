@@ -2,8 +2,8 @@ const fs = require('fs');
 const Projects = require('../model/project');
 //const logs=require('../model/project')
 //const RegisterDevice=require('../model/RegisterDevice')
-const alert_ventilatortesting_collection = require('../model/alert_ventilator_collection');
-const ventilatortesting_collection=require('../model/ventilatortesting_collection');
+const alert_ventilator_collection = require('../model/alert_ventilator_collection');
+const ventilator_collection=require('../model/ventilator_collection');
 //const ventilatorprre_collection = require('../model/ventilatorprre_collection');
 //const event_testdate_collection=require('../model/event_testdate_collection');
 //const event_agvapro_collection=require('../model/event_agvapro_collection');
@@ -50,7 +50,7 @@ const createLogs = async (req, res) => {
     const modelReference = require(`../model/${collectionName}`);
     console.log(modelReference,'modelReference')
 
-    const { version, type, log, device } = req.body;
+    const { did,version, type, log, device } = req.body;
 
     //  above details will be put in project tables
 
@@ -113,7 +113,7 @@ const createLogs = async (req, res) => {
     // else {
     //   log.state = 'inactive'
     // }
-    console.log(log.date,'log.date');
+   // console.log(log.date,'log.date');
     
 
 
@@ -121,8 +121,10 @@ const createLogs = async (req, res) => {
 
       version: version,
       type: type,
+      did:did,
       device: isDeviceSaved._id,    //make changes here for save device_id in database
       log: {
+        
         file: log.file,
         date: log.date,
         message: decodeURI(log.msg),
@@ -130,7 +132,7 @@ const createLogs = async (req, res) => {
       },
       
     });
-    console.log(log.date,'log.date');
+    //console.log(log.date,'log.date');
 
     const isLoggerSaved = await putDataIntoLoggerDb.save(putDataIntoLoggerDb);
 
@@ -498,9 +500,9 @@ const createLogsV2 = async (req, res) => {
 const getAlertsById = async (req, res) => {
   try {
     const { did } = req.params;
-    const findDeviceById = await alert_ventilatortesting_collection.find({ did: did });
+    const findDeviceById = await alert_ventilator_collection.find({ did: did });
 
-   // console.log(findDeviceById, 'findDeviceById');
+   //console.log(findDeviceById, 'findDeviceById');
     if (!findDeviceById) {
       return res.status(404).json({
         status: 0,
@@ -544,7 +546,7 @@ const getAlertsById = async (req, res) => {
 const getLogsById = async (req, res) => {
   try {
     const { device } = req.params;
-    const findDeviceById = await ventilatortesting_collection.find({ did: device });
+    const findDeviceById = await ventilator_collection.find({ did: device });
     if (!findDeviceById) {
       return res.status(404).json({
         status: 0,
@@ -1564,6 +1566,7 @@ const crashlyticsData = async (req, res) => {
       trimmedLogMsg = req.query.logMsg.substring(0, 26);
     } else trimmedLogMsg = req.query.logMsg;
     trimmedLogMsg = trimmedLogMsg.replace('[', '');
+    console.log(trimmedLogMsg,'trimmedLogMsg');
 
     if (!projectCode) {
       return res.status(400).json({
@@ -1594,6 +1597,7 @@ const crashlyticsData = async (req, res) => {
     }
     // console.log(projectCollection);
     const collectionName = require(`../model/${projectCollection.collection_name}.js`);
+    console.log(collectionName,'collectionName');
     const versionResponse = await collectionName.aggregate([
       {
         $match: {
@@ -1617,6 +1621,7 @@ const crashlyticsData = async (req, res) => {
         },
       },
     ]);
+    console.log(versionResponse,'versionResponse');
     const osArchitectureResponse = await collectionName.aggregate([
       {
         $match: {
@@ -1648,6 +1653,7 @@ const crashlyticsData = async (req, res) => {
         },
       },
     ]);
+    console.log(osArchitectureResponse,'osArchitectureResponse')
     const modelNameResponse = await collectionName.aggregate([
       {
         $match: {
@@ -1679,6 +1685,7 @@ const crashlyticsData = async (req, res) => {
         },
       },
     ]);
+    console.log(modelNameResponse,'modelNameResponse')
     res.status(200).json({
       status: 1,
       data: { versionResponse, osArchitectureResponse, modelNameResponse },

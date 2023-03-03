@@ -143,18 +143,33 @@ const registerDevice = async (req, res) => {
   };
   const UpdateRegisterDeviceDetails=async(req,res)=>{
     try{
-      const{did}=req.param;
-      const UpdateRegisterDevice=await RegisterDevice.findOne({deviceId:did},
-        {$set:{ DeviceId,AliasName, IMEI_NO, Hospital_Name,Ward_No,Ventilator_Operator,Doctor_Name } = req.body
+      const{DeviceId}=req.params;
+      //console.log(req.params.DeviceId)
+     
+      const UpdateRegisterDevice=await RegisterDevice.findOneAndUpdate({DeviceId:DeviceId},
+        {$set:
+          {AliasName, IMEI_NO, Hospital_Name,Ward_No,Ventilator_Operator,Doctor_Name } = req.body
       });
+      if(!UpdateRegisterDevice){
+        return res.status(400).json({
+          status: 0,
+          data: {
+            err: {
+              generatedTime: new Date(),
+              errMsg: 'Device not found.',
+              msg: 'Device not found.',
+              type: 'Client Error',
+            },
+          },
+        });
+        
+      }
       res.status(201).json({
         status: 1,
-        data: {UpdateRegisterDevice},
+        //data: {UpdateRegisterDevice},
         message: 'Updated successfully!',
       });
       
-      
-
     }
     catch(err){
       return res.status(500).json({
@@ -175,7 +190,7 @@ const registerDevice = async (req, res) => {
   const getRegisterDeviceById=async(req,res)=>{
     try {
       const { did } = req.params;
-    const RegisterDeviceCollection=await RegisterDevice.findOne({deviceId:did});getRegisterDeviceById
+    const RegisterDeviceCollection=await RegisterDevice.findOne({deviceId:did});//getRegisterDeviceById
    // console.log('registerDeviceCollection',RegisterDeviceCollection)
     if(!RegisterDeviceCollection){
       return res.status(404).json({
