@@ -164,13 +164,19 @@ const registerDevice = async (req, res) => {
         });
         
       }
+    
+
+  
+      const savedDevice = await UpdateRegisterDevice.save(UpdateRegisterDevice);
+     if(savedDevice){
       res.status(201).json({
         status: 1,
-        //data: {UpdateRegisterDevice},
+        data: {UpdateRegisterDevice},
         message: 'Updated successfully!',
       });
       
     }
+  }
     catch(err){
       return res.status(500).json({
         status: -1,

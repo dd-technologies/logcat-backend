@@ -1705,6 +1705,182 @@ const crashlyticsData = async (req, res) => {
     });
   }
 };
+const crashlyticsData2 = async (req, res) => {
+  try {
+    const { did } = req.params;
+
+    // if (!req.query.projectType) {
+    //   return res.status(400).json({
+    //     status: 0,
+    //     data: {
+    //       err: {
+    //         generatedTime: new Date(),
+    //         errMsg: 'project type is required',
+    //         msg: 'project type is required',
+    //         type: 'Client Error',
+    //       },
+    //     },
+    //   });
+    // }
+
+    if (!req.query.logMsg) {
+      return res.status(400).json({
+        status: 0,
+        data: {
+          err: {
+            generatedTime: new Date(),
+            errMsg: 'Log message not provided.',
+            msg: 'Log message not provided.',
+            type: 'ValidationError',
+          },
+        },
+      });
+    }
+
+    var trimmedLogMsg;
+    if (req.query.logMsg.length > 26) {
+      trimmedLogMsg = req.query.logMsg.substring(0, 26);
+    } else trimmedLogMsg = req.query.logMsg;
+    trimmedLogMsg = trimmedLogMsg.replace('[', '');
+    console.log(trimmedLogMsg,'trimmedLogMsg');
+
+    if (!did) {
+      return res.status(400).json({
+        status: 0,
+        data: {
+          err: {
+            generatedTime: new Date(),
+            errMsg: 'DeviceId not provided.',
+            msg: 'DeviceId not provided.',
+            type: 'Mongodb Error',
+          },
+        },
+      });
+    }
+    const projectCollection = await Projects.findOne({ did:did});
+    if (!projectCollection) {
+      return res.status(404).json({
+        status: 0,
+        data: {
+          err: {
+            generatedTime: new Date(),
+            errMsg: 'Project not found',
+            msg: 'Project not found',
+            type: 'Internal Server Error',
+          },
+        },
+      });
+    }
+    // console.log(projectCollection);
+    const collectionName = require(`../model/${projectCollection.collection_name}.js`);
+    console.log(collectionName,'collectionName');
+    const versionResponse = await collectionName.aggregate([
+      {
+        $match: {
+          $and: [
+            // {$unwind : '$log'},
+            {
+              'log.date': {
+                $gte: new Date(req.query.startDate),
+                $lte: new Date(req.query.endDate),
+              },
+            },
+            { 'log.message': { $regex: trimmedLogMsg } },
+            { type: req.query.projectType },
+          ],
+        },
+      },
+      {
+        $group: {
+          _id: '$version',
+          data: { $sum: 1 },
+        },
+      },
+    ]);
+    console.log(versionResponse,'versionResponse');
+    const osArchitectureResponse = await collectionName.aggregate([
+      {
+        $match: {
+          $and: [
+            // {$unwind : '$log'},
+            {
+              'log.date': {
+                $gte: new Date(req.query.startDate),
+                $lte: new Date(req.query.endDate),
+              },
+            },
+            { 'log.message': { $regex: trimmedLogMsg } },
+            { type: req.query.projectType },
+          ],
+        },
+      },
+      {
+        $lookup: {
+          from: 'devices',
+          localField: 'device',
+          foreignField: '_id',
+          as: 'device',
+        },
+      },
+      {
+        $group: {
+          _id: '$device.os.name',
+          data: { $sum: 1 },
+        },
+      },
+    ]);
+    console.log(osArchitectureResponse,'osArchitectureResponse')
+    const modelNameResponse = await collectionName.aggregate([
+      {
+        $match: {
+          $and: [
+            // {$unwind : '$log'},
+            {
+              'log.date': {
+                $gte: new Date(req.query.startDate),
+                $lte: new Date(req.query.endDate),
+              },
+            },
+            { 'log.message': { $regex: trimmedLogMsg } },
+            { type: req.query.projectType },
+          ],
+        },
+      },
+      {
+        $lookup: {
+          from: 'devices',
+          localField: 'device',
+          foreignField: '_id',
+          as: 'device',
+        },
+      },
+      {
+        $group: {
+          _id: '$device.name',
+          data: { $sum: 1 },
+        },
+      },
+    ]);
+    console.log(modelNameResponse,'modelNameResponse')
+    res.status(200).json({
+      status: 1,
+      data: { versionResponse, osArchitectureResponse, modelNameResponse },
+      message: 'Crashlytics data on the basis of date.',
+    });
+  } catch (err) {
+    return res.status(500).json({
+      status: -1,
+      data: {
+        err: {
+          generatedTime: new Date(),
+          errMsg: err.stack,
+          msg: err.message,
+          type: err.name,
+        },
+      },
+    });
+  }
+};
 
 // UNUSED
 const getErrorCountByOSArchitecture = async (req, res) => {
@@ -2231,6 +2407,174 @@ const dateWiseLogOccurrencesByLogMsg = async (req, res) => {
     });
   }
 };
+const dateWiseLogOccurrencesByLogMsgWithDeviceId = async (req, res) => {
+  try {
+    const { did } = req.params;
+
+    // if (!req.query.projectType) {
+    //   return res.status(400).json({
+    //     status: 0,
+    //     data: {
+    //       err: {
+    //         generatedTime: new Date(),
+    //         errMsg: 'Project Type not provided.',
+    //         msg: 'Project Type not provided.',
+    //         type: 'Mongodb Error',
+    //       },
+    //     },
+    //   });
+    // }
+
+    if (!did) {
+      return res.status(404).json({
+        status: 0,
+        data: {
+          err: {
+            generatedTime: new Date(),
+            errMsg: 'DeviceId not found',
+            msg: 'DeviceId not found',
+            type: 'Internal Server Error',
+          },
+        },
+      });
+    }
+    const projectCollection = await Projects.findOne({ did:did});
+    if (!projectCollection) {
+      return res.status(404).json({
+        status: 0,
+        data: {
+          err: {
+            generatedTime: new Date(),
+            errMsg: 'Project not found',
+            msg: 'Project not found',
+            type: 'Internal Server Error',
+          },
+        },
+      });
+    }
+
+    if (!req.query.logMsg) {
+      return res.status(400).json({
+        status: 0,
+        data: {
+          err: {
+            generatedTime: new Date(),
+            errMsg: 'Log message not provided.',
+            msg: 'Log message not provided.',
+            type: 'ValidationError',
+          },
+        },
+      });
+    }
+
+    var trimmedLogMsg;
+    if (req.query.logMsg.length > 26) {
+      trimmedLogMsg = req.query.logMsg.substring(0, 26);
+    } else trimmedLogMsg = req.query.logMsg;
+    if (trimmedLogMsg.includes('(') && !trimmedLogMsg.includes(')')) {
+      trimmedLogMsg = trimmedLogMsg.concat(')');
+    }
+    trimmedLogMsg = trimmedLogMsg.replace('[', '');
+
+    const collectionName = require(`../model/${projectCollection.collection_name}.js`);
+    const response = await collectionName.aggregate([
+      {
+        $match: {
+          $and: [
+            // {$unwind : '$log'},
+            {
+              'log.date': {
+                $gte: new Date(req.query.startDate),
+                $lte: new Date(req.query.endDate),
+              },
+            },
+            { 'log.message': { $regex: trimmedLogMsg } },
+            { type: req.query.projectType },
+          ],
+        },
+      },
+      {
+        $group: {
+          _id: {
+            DATE: { $substr: ['$log.date', 0, 10] },
+          },
+          data: { $sum: 1 },
+        },
+      },
+      // { $sort: { "DATE": -1 } },
+      {
+        $project: {
+          _id: 0,
+          date: '$_id.DATE',
+          data: 1,
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          stats: { $push: '$$ROOT' },
+        },
+      },
+      {
+        $project: {
+          stats: {
+            $map: {
+              input: getDaysArray(
+                new Date(req.query.startDate),
+                new Date(req.query.endDate)
+              ),
+              as: 'date_new',
+              in: {
+                $let: {
+                  vars: {
+                    dateIndex: { $indexOfArray: ['$stats.date', '$$date_new'] },
+                  },
+                  in: {
+                    $cond: {
+                      if: { $ne: ['$$dateIndex', -1] },
+                      then: {
+                        $arrayElemAt: ['$stats', '$$dateIndex'],
+                      },
+                      else: {
+                        date: { $substr: [{ $toDate: '$$date_new' }, 0, 10] },
+                        data: 0,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        $unwind: '$stats',
+      },
+      {
+        $replaceRoot: {
+          newRoot: '$stats',
+        },
+      },
+    ]);
+    res.status(200).json({
+      status: 1,
+      data: { response },
+      message: 'Log count per log message on the basis of date.',
+    });
+  } catch (err) {
+    return res.status(500).json({
+      status: -1,
+      data: {
+        err: {
+          generatedTime: new Date(),
+          errMsg: err.stack,
+          msg: err.message,
+          type: err.name,
+        },
+      },
+    });
+  }
+};
 
 // UNUSED
 const getLogsCountWithOs = async (req, res) => {
@@ -2378,6 +2722,126 @@ const getLogsCountWithModelName = async (req, res) => {
     });
   }
 };
+const getCrashOccurrenceByLogMsgWithDeviceId=async(req,res)=>{
+  try{
+    const{did}=req.params;
+    if(!did){
+      return res.status(400).json({
+        status:0,
+        data:{
+          err:{
+            generatedTime:new Date(),
+            errMsg:'DeviceId is required',
+            msg:'DeviceId is required',
+            type:'mongodb Error'
+
+          }
+        }
+      });
+    }
+    // if (!projectCode) {
+    //   return res.status(400).json({
+    //     status: 0,
+    //     data: {
+    //       err: {
+    //         generatedTime: new Date(),
+    //         errMsg: 'Project code not provided.',
+    //         msg: 'Project code not provided.',
+    //         type: 'Mongodb Error',
+    //       },
+    //     },
+    //   });
+    // }
+    
+
+    if (!req.query.logMsg) {
+      return res.status(400).json({
+        status: 0,
+        data: {
+          err: {
+            generatedTime: new Date(),
+            errMsg: 'Message not provided.',
+            msg: 'Message not provided.',
+            type: 'Mongodb Error',
+          },
+        },
+      });
+    }
+    console.log(req.query.logMsg,'ftrtdefffffffff');
+    var trimmedLogMsg;
+    if (req.query.logMsg.length > 26) {
+      trimmedLogMsg = req.query.logMsg.substring(0, 26);
+    } else trimmedLogMsg = req.query.logMsg;
+    trimmedLogMsg = trimmedLogMsg.replace('[', '');
+
+    const projectCollection = await Projects.findOne({ did: did});
+    console.log(projectCollection,"projectCollection");
+    if (!projectCollection) {
+      return res.status(400).json({
+        status: 0,
+        data: {
+          err: {
+            generatedTime: new Date(),
+            errMsg: 'Project code not provided.',
+            msg: 'Project code not provided.',
+            type: 'Mongodb Error',
+          },
+        },
+      });
+    }
+
+    const collectionName = require(`../model/${projectCollection.collection_name}.js`);
+    console.log(collectionName);
+
+    const response = await collectionName.aggregate([
+      {
+        $match: {
+          $and: [
+            // {did:req.query.macId },
+            { 'log.message': { $regex: trimmedLogMsg } },
+            { 'log.type': 'error' },
+            { type: req.query.projectType },
+          ],
+        },
+      },
+      {
+        $lookup: {
+          from: 'devices',
+          localField: 'device',
+          foreignField: '_id',
+          as: 'device',
+        },
+      },
+      { $group: { _id: '$device.did', 
+        count: { $sum: 1 } } },
+    ]);
+    console.log(response,'response');
+    
+
+    return res.status(200).json({
+      status: 1,
+      data: {
+        response,
+      },
+      message: 'successfull',
+    });
+
+
+  }
+  catch(err){return res.status(500).json({
+    status: -1,
+    data: {
+      err: {
+        generatedTime: new Date(),
+        errMsg: err.stack,
+        msg: err.message,
+        type: err.name,
+      },
+    },
+  });
+
+  }
+}
 
 const getCrashOccurrenceByLogMsg = async (req, res) => {
   try {
@@ -2432,6 +2896,8 @@ const getCrashOccurrenceByLogMsg = async (req, res) => {
     trimmedLogMsg = trimmedLogMsg.replace('[', '');
 
     const projectCollection = await Projects.findOne({ code: projectCode });
+    console.log(projectCollection,"projectCollection");
+
     if (!projectCollection) {
       return res.status(400).json({
         status: 0,
@@ -2445,8 +2911,10 @@ const getCrashOccurrenceByLogMsg = async (req, res) => {
         },
       });
     }
+    //console.log(collectionName);
 
     const collectionName = require(`../model/${projectCollection.collection_name}.js`);
+    console.log(collectionName);
 
     const response = await collectionName.aggregate([
       {
@@ -2467,8 +2935,11 @@ const getCrashOccurrenceByLogMsg = async (req, res) => {
           as: 'device',
         },
       },
-      { $group: { _id: '$device.did', count: { $sum: 1 } } },
+      { $group: { _id: '$device.did', 
+        count: { $sum: 1 } } },
     ]);
+    console.log(response,'response');
+    
 
     return res.status(200).json({
       status: 1,
@@ -2576,5 +3047,8 @@ module.exports = {
   getErrorCountByVersion,
   createEvents,
   getLogsById,
-  getAllEvents
+  getAllEvents,
+  crashlyticsData2,
+  getCrashOccurrenceByLogMsgWithDeviceId,
+  dateWiseLogOccurrencesByLogMsgWithDeviceId
 };
