@@ -45,7 +45,7 @@ const event_ventilator_collectionSchema = new mongoose.Schema(
           required:[true,"message is required"]
         },
         date:{
-          type:Date,
+          type:String,
           required:[true,"Date time is required"]
         },
       

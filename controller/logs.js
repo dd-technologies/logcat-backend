@@ -747,6 +747,7 @@ const createAlerts = async (req, res, next) => {
 
     //  console.log(modelReference)
 
+
     const { did, type, ack, priority, date } = req.body;
     // const d=ac.date
     // console.log(d);
@@ -1059,7 +1060,7 @@ const getFilteredLogs = async (req, res) => {
     }
 
     const collectionName = require(`../model/${isProjectExist.collection_name}.js`);
-    console.log(collectionName,'collectionName');
+    //console.log(collectionName,'collectionName');
 
     let dt = new Date(req.query.endDate);
     dt.setDate(dt.getDate() + 1);
@@ -1090,7 +1091,7 @@ const getFilteredLogs = async (req, res) => {
     let skip = (page - 1) * limit;
 
     const data = await collectionName.aggregate([
-      {
+      {   
         $facet: {
           totalRecords: [
             matchOperator,
@@ -1127,6 +1128,7 @@ const getFilteredLogs = async (req, res) => {
         pageLimit: data[0]?.data.length,
         logs: data[0]?.data,
       },
+      
     });
   } catch (err) {
     return res.status(500).json({
