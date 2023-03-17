@@ -9,7 +9,7 @@ const logsSchema = mongoose.Schema(
       required: [true, "Log file name is required."],
     },
     date: {
-      type: Date,
+      type: String,
       required: [true, "Log date is required."],
       default: Date.now()
     },

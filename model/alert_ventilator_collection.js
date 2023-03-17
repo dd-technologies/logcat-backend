@@ -37,7 +37,7 @@
                       required: [true, 'Code is required']
                     },
                     date: {
-                      type: Date,
+                      type: String,
                       required: [true, 'Date time is required']
                     }
                 },
