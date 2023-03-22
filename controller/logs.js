@@ -1,14 +1,8 @@
 const fs = require('fs');
 const Projects = require('../model/project');
-//const logs=require('../model/project')
-//const RegisterDevice=require('../model/RegisterDevice')
 const alert_ventilator_collection = require('../model/alert_ventilator_collection');
-const ventilator_collection=require('../model/ventilator_collection');
-//const ventilatorprre_collection = require('../model/ventilatorprre_collection');
-//const event_testdate_collection=require('../model/event_testdate_collection');
-//const event_agvapro_collection=require('../model/event_agvapro_collection');
-//const event_ventilator_collection = require('../model/event_ventilator_collection')
-const event_ventilator_collection=require('../model/event_ventilator_collection');
+const ventilator_collection = require('../model/ventilator_collection');
+const event_ventilator_collection = require('../model/event_ventilator_collection');
 const { getDaysArray } = require('../helper/helperFunctions');
 const Device = require('../model/device');
 const Email = require('../utils/email');
@@ -48,9 +42,9 @@ const createLogs = async (req, res) => {
     // console.log(collectionName,'collectionName')
 
     const modelReference = require(`../model/${collectionName}`);
-    console.log(modelReference,'modelReference')
+    console.log(modelReference, 'modelReference')
 
-    const { did,version, type, log, device } = req.body;
+    const { did, version, type, log, device } = req.body;
 
     //  above details will be put in project tables
 
@@ -81,56 +75,23 @@ const createLogs = async (req, res) => {
         },
       });
     }
-    // const date=new Date();
-    // let hours=date.getHours();
-    // if(hours<24&&hours>=0){
-    //   log.status="active";
 
-    // }
-    // else{
-    //   log.status="Inactive"
-    // }
-
-
-    //console.log(log.date);
-
-    // console.log(log.date.grt)
-   // const d = log.date;
-    //console.log(d);
-    // const dt=new Date(d);
-    //console.log(dt.getHours());
-
-    // console.log(d);
-    // let hour = d.getHours();
-    // console.log(hour);
-    // const pickedDate = d.replace(/- /g, " ");
-    // const todayDate = new Date();
-    // todayDate.setHours(0, 0, 0, 0);
-    // dateDiff = Math.abs(Number(todayDate) - pickedDate);
-    // if (dateDiff > 86400000) {
-    //   log.state = 'active'
-    // }
-    // else {
-    //   log.state = 'inactive'
-    // }
-   // console.log(log.date,'log.date');
-    
 
 
     const putDataIntoLoggerDb = await new modelReference({
 
       version: version,
       type: type,
-      did:did,
+      did: did,
       device: isDeviceSaved._id,    //make changes here for save device_id in database
       log: {
-        
+
         file: log.file,
         date: log.date,
         message: decodeURI(log.msg),
         type: log.type,
       },
-      
+
     });
     //console.log(log.date,'log.date');
 
@@ -502,7 +463,7 @@ const getAlertsById = async (req, res) => {
     const { did } = req.params;
     const findDeviceById = await alert_ventilator_collection.find({ did: did });
 
-   //console.log(findDeviceById, 'findDeviceById');
+    //console.log(findDeviceById, 'findDeviceById');
     if (!findDeviceById) {
       return res.status(404).json({
         status: 0,
@@ -591,11 +552,11 @@ const getEventsById = async (req, res) => {
     const findDeviceById = await event_ventilator_collection.find({ did: did });
     // console.log(findDeviceById,'findDeviceById');
     // let dt1=findDeviceById.map(a=>a.date);
-    
-    
+
+
 
     // console.log(findDeviceById[0].date);
-   // console.log(findDeviceById,'findDeviceById')
+    // console.log(findDeviceById,'findDeviceById')
     const maxDate = new Date(
       Math.max(
         ...findDeviceById.map(element => {
@@ -603,20 +564,20 @@ const getEventsById = async (req, res) => {
         }),
       ),
     );
-   //console.log(maxDate);  
+    //console.log(maxDate);  
     const dt1 = new Date(maxDate);
     //console.log(dt1)
     const dt2 = new Date();
-   // dt=new Date(maxDate);
+    // dt=new Date(maxDate);
     //dt=new Date();
     var diff = (dt2.getTime() - dt1.getTime()) / 1000;
     diff = Math.trunc(Math.abs(diff / (60 * 60)));
     //console.log(diff)
-    if (diff >= 24||diff<0) {
+    if (diff >= 24 || diff < 0) {
       state = 'inactive';
     }
     else {
-     state = 'active';
+      state = 'active';
     }
 
     // const dt1=await findDeviceById.find(date);
@@ -649,7 +610,7 @@ const getEventsById = async (req, res) => {
       },
       message: 'successfull',
       //state:findDeviceById.find().sort({date:-1}).limit(1)
-      state:state
+      state: state
     });
 
   }
@@ -675,10 +636,10 @@ const getAllEvents = async (req, res) => {
     const allEvents = await event_ventilator_collection.find();
     //console.log(allEvents);
 
-    
+
     return res.status(200).json({
       status: 1,
-      data: { data: allEvents},
+      data: { data: allEvents },
       message: 'Successful',
     });
   } catch (err) {
@@ -706,7 +667,7 @@ const createAlerts = async (req, res, next) => {
   try {
     const { project_code } = req.params;
     // check project exist or not
-    const findProjectWithCode = await Projects.findOne({ code: project_code }).sort({ _id: -1 });
+    const findProjectWithCode = await Projects.findOne({ code: project_code });
 
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -742,66 +703,9 @@ const createAlerts = async (req, res, next) => {
       });
     }
     const collectionName = findProjectWithCode.alert_collection_name;
-     //console.log(collectionName,'collectionName---')
+
     const modelReference = require(`../model/${collectionName}`);
-
-    //  console.log(modelReference)
-
-
     const { did, type, ack, priority, date } = req.body;
-    // const d=ac.date
-    // console.log(d);
-    // console.log('type', type);
-
-    // let arrayOfObjects = [];
-    // for (let i = 0; i < ack.length; i++) {
-    //   arrayOfObjects.push(ack[i]);
-    // }
-    // //console.log(date);
-    // var dt1 = new Date(date);
-    // //console.log(dt1)
-    // let dt2 = new Date();
-    // //console.log(dt2);
-    // var diff = (dt2.getTime() - dt1.getTime()) / 1000;
-    // diff = Math.trunc(Math.abs(diff / (60 * 60)));
-    // //console.log(diff)
-    // if (diff >= 24) {
-    //   state = 'inactive';
-    // }
-    // else {
-    //   state = 'active';
-    // }
-
-
-
-
-    //console.log(date,'generated date ')
-    //     // console.log(arrayOfObjects)
-    //     // const d=ack[2];
-    //     // console.log(d);
-
-    // // SimpleDateFormat inFormat = new SimpleDateFormat("dd-MMM-yyyy");
-    //     let result=ack.map(a=>a.timestamp);
-    //     let d=Date.parse(result);
-    //     console.log(d);
-
-    //     // console.log(result);
-    //     // let d=result.toString();
-    //     // console.log(d)
-    //     // let d1=Date.parse(d);
-
-
-    //     // console.log(d)
-
-
-    //     let todayDate=new Date();
-    //     var diff=(todayDate.getTime()-d.getTime())/1000;
-    //     diff=diff/(60*60);
-    //     console.log(diff);
-    // console.log(did,"did of alerts");
-
-
-
     let dbSavePromise = ack.map(async (ac) => {
       const putDataIntoLoggerDb = await new modelReference({
         did: did,
@@ -813,7 +717,7 @@ const createAlerts = async (req, res, next) => {
         type: type,
         priority: priority,
         date: date
-        //state: state
+
 
       });
 
@@ -821,6 +725,7 @@ const createAlerts = async (req, res, next) => {
     });
 
     let alerts = await Promise.allSettled(dbSavePromise);
+    //console.log(alerts,'alerts');
 
     var alertsErrArr = [];
     var alertsErrMsgArr = [];
@@ -911,8 +816,8 @@ const createEvents = async (req, res, next) => {
     //console.log(collectionName,'collectionName-----')
     const modelReference = require(`../model/${collectionName}`);
     //console.log(modelReference,'modelReference');
-    const { did, type, message,date} = req.body;
-    if (!did || !type || !message|| !date) {
+    const { did, type, message, date } = req.body;
+    if (!did || !type || !message || !date) {
       return res.status(400).json({
         status: 0,
         data: {
@@ -930,7 +835,7 @@ const createEvents = async (req, res, next) => {
       did: did,
       message: message,
       type: type,
-      date:date
+      date: date
     });
     const SaveEvents = await events.save(events);
     if (SaveEvents) {
@@ -941,6 +846,7 @@ const createEvents = async (req, res, next) => {
 
       });
     }
+
     else {
       res.status(500).json({
         status: 0,
@@ -954,53 +860,7 @@ const createEvents = async (req, res, next) => {
         },
       }); I
     }
-    // let dbSavePromise = ack.map(async (ac) => {
-    //   const putDataIntoLoggerDb = await new modelReference({
-    //     did: did,
-    //     // ack: {
-    //     //   msg: ac.msg,
-    //     //   code: ac.code,
-    //     //   date: ac.timestamp,
-    //     // },
-    //     message:message,
 
-    //     type: type,
-    //   });
-
-    //   return putDataIntoLoggerDb.save(putDataIntoLoggerDb);
-    // });
-
-    // let events = await Promise.allSettled(dbSavePromise);
-
-    // var eventsErrArr = [];
-    // var eventsErrMsgArr = [];
-
-    // events.map((events) => {
-    //   eventsErrArr.push(events.status);
-    //   if (events.status === 'rejected') {
-    //     eventsErrMsgArr.push(events.reason.message);
-    //   }
-    // });
-
-    // if (!eventsErrArr.includes('rejected')) {
-    //   return res.status(201).json({
-    //     status: 1,
-    //     data: { eventsCount: events.length },
-    //     message: 'Successful',
-    //   });
-    // } else {
-    //   res.status(400).json({
-    //     status: eventsErrArr.length === events.length ? -1 : 0,
-    //     data: {
-    //       err: {
-    //         generatedTime: new Date(),
-    //         errMsg: eventsErrMsgArr.join(' | '),
-    //         msg: `Error saving ${eventsErrMsgArr.length} out of ${events.length} events(s)`,
-    //         type: 'ValidationError',
-    //       },
-    //     },
-    //   });
-    // }
 
 
   }
@@ -1021,7 +881,7 @@ const createEvents = async (req, res, next) => {
 
 
 /**
- * desc     get project with filter
+ * desc     get project withpt filter
  * api      @/api/logger/projects/getDetails/:projectCode
  *
  */
@@ -1091,7 +951,7 @@ const getFilteredLogs = async (req, res) => {
     let skip = (page - 1) * limit;
 
     const data = await collectionName.aggregate([
-      {   
+      {
         $facet: {
           totalRecords: [
             matchOperator,
@@ -1128,7 +988,7 @@ const getFilteredLogs = async (req, res) => {
         pageLimit: data[0]?.data.length,
         logs: data[0]?.data,
       },
-      
+
     });
   } catch (err) {
     return res.status(500).json({
@@ -1210,7 +1070,7 @@ const getAlertsWithFilter = async (req, res) => {
     let limit = parseInt(req.query.limit) || 500;
     let skip = (page - 1) * limit;
     //console.log(sortOperator);
-    
+
     const data = await collectionName.aggregate([
       {
         $facet: {
@@ -1568,7 +1428,7 @@ const crashlyticsData = async (req, res) => {
       trimmedLogMsg = req.query.logMsg.substring(0, 26);
     } else trimmedLogMsg = req.query.logMsg;
     trimmedLogMsg = trimmedLogMsg.replace('[', '');
-    console.log(trimmedLogMsg,'trimmedLogMsg');
+    console.log(trimmedLogMsg, 'trimmedLogMsg');
 
     if (!projectCode) {
       return res.status(400).json({
@@ -1599,7 +1459,7 @@ const crashlyticsData = async (req, res) => {
     }
     // console.log(projectCollection);
     const collectionName = require(`../model/${projectCollection.collection_name}.js`);
-    console.log(collectionName,'collectionName');
+    console.log(collectionName, 'collectionName');
     const versionResponse = await collectionName.aggregate([
       {
         $match: {
@@ -1623,7 +1483,7 @@ const crashlyticsData = async (req, res) => {
         },
       },
     ]);
-    console.log(versionResponse,'versionResponse');
+    console.log(versionResponse, 'versionResponse');
     const osArchitectureResponse = await collectionName.aggregate([
       {
         $match: {
@@ -1655,7 +1515,7 @@ const crashlyticsData = async (req, res) => {
         },
       },
     ]);
-    console.log(osArchitectureResponse,'osArchitectureResponse')
+    console.log(osArchitectureResponse, 'osArchitectureResponse')
     const modelNameResponse = await collectionName.aggregate([
       {
         $match: {
@@ -1687,7 +1547,7 @@ const crashlyticsData = async (req, res) => {
         },
       },
     ]);
-    console.log(modelNameResponse,'modelNameResponse')
+    console.log(modelNameResponse, 'modelNameResponse')
     res.status(200).json({
       status: 1,
       data: { versionResponse, osArchitectureResponse, modelNameResponse },
@@ -1744,7 +1604,7 @@ const crashlyticsData2 = async (req, res) => {
       trimmedLogMsg = req.query.logMsg.substring(0, 26);
     } else trimmedLogMsg = req.query.logMsg;
     trimmedLogMsg = trimmedLogMsg.replace('[', '');
-    console.log(trimmedLogMsg,'trimmedLogMsg');
+    console.log(trimmedLogMsg, 'trimmedLogMsg');
 
     if (!did) {
       return res.status(400).json({
@@ -1759,7 +1619,7 @@ const crashlyticsData2 = async (req, res) => {
         },
       });
     }
-    const projectCollection = await Projects.findOne({ did:did});
+    const projectCollection = await Projects.findOne({ did: did });
     if (!projectCollection) {
       return res.status(404).json({
         status: 0,
@@ -1775,7 +1635,7 @@ const crashlyticsData2 = async (req, res) => {
     }
     // console.log(projectCollection);
     const collectionName = require(`../model/${projectCollection.collection_name}.js`);
-    console.log(collectionName,'collectionName');
+    console.log(collectionName, 'collectionName');
     const versionResponse = await collectionName.aggregate([
       {
         $match: {
@@ -1799,7 +1659,7 @@ const crashlyticsData2 = async (req, res) => {
         },
       },
     ]);
-    console.log(versionResponse,'versionResponse');
+    console.log(versionResponse, 'versionResponse');
     const osArchitectureResponse = await collectionName.aggregate([
       {
         $match: {
@@ -1831,7 +1691,7 @@ const crashlyticsData2 = async (req, res) => {
         },
       },
     ]);
-    console.log(osArchitectureResponse,'osArchitectureResponse')
+    console.log(osArchitectureResponse, 'osArchitectureResponse')
     const modelNameResponse = await collectionName.aggregate([
       {
         $match: {
@@ -1863,7 +1723,7 @@ const crashlyticsData2 = async (req, res) => {
         },
       },
     ]);
-    console.log(modelNameResponse,'modelNameResponse')
+    console.log(modelNameResponse, 'modelNameResponse')
     res.status(200).json({
       status: 1,
       data: { versionResponse, osArchitectureResponse, modelNameResponse },
@@ -2440,7 +2300,7 @@ const dateWiseLogOccurrencesByLogMsgWithDeviceId = async (req, res) => {
         },
       });
     }
-    const projectCollection = await Projects.findOne({ did:did});
+    const projectCollection = await Projects.findOne({ did: did });
     if (!projectCollection) {
       return res.status(404).json({
         status: 0,
@@ -2724,18 +2584,18 @@ const getLogsCountWithModelName = async (req, res) => {
     });
   }
 };
-const getCrashOccurrenceByLogMsgWithDeviceId=async(req,res)=>{
-  try{
-    const{did}=req.params;
-    if(!did){
+const getCrashOccurrenceByLogMsgWithDeviceId = async (req, res) => {
+  try {
+    const { did } = req.params;
+    if (!did) {
       return res.status(400).json({
-        status:0,
-        data:{
-          err:{
-            generatedTime:new Date(),
-            errMsg:'DeviceId is required',
-            msg:'DeviceId is required',
-            type:'mongodb Error'
+        status: 0,
+        data: {
+          err: {
+            generatedTime: new Date(),
+            errMsg: 'DeviceId is required',
+            msg: 'DeviceId is required',
+            type: 'mongodb Error'
 
           }
         }
@@ -2754,7 +2614,7 @@ const getCrashOccurrenceByLogMsgWithDeviceId=async(req,res)=>{
     //     },
     //   });
     // }
-    
+
 
     if (!req.query.logMsg) {
       return res.status(400).json({
@@ -2769,15 +2629,15 @@ const getCrashOccurrenceByLogMsgWithDeviceId=async(req,res)=>{
         },
       });
     }
-    console.log(req.query.logMsg,'ftrtdefffffffff');
+    console.log(req.query.logMsg, 'ftrtdefffffffff');
     var trimmedLogMsg;
     if (req.query.logMsg.length > 26) {
       trimmedLogMsg = req.query.logMsg.substring(0, 26);
     } else trimmedLogMsg = req.query.logMsg;
     trimmedLogMsg = trimmedLogMsg.replace('[', '');
 
-    const projectCollection = await Projects.findOne({ did: did});
-    console.log(projectCollection,"projectCollection");
+    const projectCollection = await Projects.findOne({ did: did });
+    console.log(projectCollection, "projectCollection");
     if (!projectCollection) {
       return res.status(400).json({
         status: 0,
@@ -2814,11 +2674,15 @@ const getCrashOccurrenceByLogMsgWithDeviceId=async(req,res)=>{
           as: 'device',
         },
       },
-      { $group: { _id: '$device.did', 
-        count: { $sum: 1 } } },
+      {
+        $group: {
+          _id: '$device.did',
+          count: { $sum: 1 }
+        }
+      },
     ]);
-    console.log(response,'response');
-    
+    console.log(response, 'response');
+
 
     return res.status(200).json({
       status: 1,
@@ -2830,17 +2694,18 @@ const getCrashOccurrenceByLogMsgWithDeviceId=async(req,res)=>{
 
 
   }
-  catch(err){return res.status(500).json({
-    status: -1,
-    data: {
-      err: {
-        generatedTime: new Date(),
-        errMsg: err.stack,
-        msg: err.message,
-        type: err.name,
+  catch (err) {
+    return res.status(500).json({
+      status: -1,
+      data: {
+        err: {
+          generatedTime: new Date(),
+          errMsg: err.stack,
+          msg: err.message,
+          type: err.name,
+        },
       },
-    },
-  });
+    });
 
   }
 }
@@ -2898,7 +2763,7 @@ const getCrashOccurrenceByLogMsg = async (req, res) => {
     trimmedLogMsg = trimmedLogMsg.replace('[', '');
 
     const projectCollection = await Projects.findOne({ code: projectCode });
-    console.log(projectCollection,"projectCollection");
+    console.log(projectCollection, "projectCollection");
 
     if (!projectCollection) {
       return res.status(400).json({
@@ -2937,11 +2802,15 @@ const getCrashOccurrenceByLogMsg = async (req, res) => {
           as: 'device',
         },
       },
-      { $group: { _id: '$device.did', 
-        count: { $sum: 1 } } },
+      {
+        $group: {
+          _id: '$device.did',
+          count: { $sum: 1 }
+        }
+      },
     ]);
-    console.log(response,'response');
-    
+    console.log(response, 'response');
+
 
     return res.status(200).json({
       status: 1,
