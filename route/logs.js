@@ -18,6 +18,7 @@ const {
   createLogs,
   createLogsV2,
   createAlerts,
+  createTrends,
   getLogsByLogType,
   dateWiseCrashCount,
   dateWiseLogOccurrencesByLogMsg,
@@ -101,6 +102,12 @@ router.post("/alerts/:project_code",
   body('ack.*.code').notEmpty(),
   body('ack.*.timestamp').notEmpty(),
   createEvents);
+  router.post("/trends/:project_code",
+  body('did').notEmpty(),
+  body('type').notEmpty(),
+  body('ack.*.code').notEmpty(),
+  body('ack.*.timestamp').notEmpty(),
+  createTrends);
 
 //Protected Route
 router.get("/:projectCode", isAuth, getFilteredLogs);

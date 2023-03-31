@@ -1,6 +1,7 @@
 const fs = require('fs');
 const Projects = require('../model/project');
 const alert_ventilator_collection = require('../model/alert_ventilator_collection');
+const trends_ventilator_collection = require('../model/trends_ventilator_collection');
 const ventilator_collection = require('../model/ventilator_collection');
 const event_ventilator_collection = require('../model/event_ventilator_collection');
 const { getDaysArray } = require('../helper/helperFunctions');
@@ -843,6 +844,126 @@ const createEvents = async (req, res, next) => {
         status: 1,
         data: { eventCounts: SaveEvents.length },
         message: 'Event add!',
+
+      });
+    }
+
+    else {
+      res.status(500).json({
+        status: 0,
+        data: {
+          err: {
+            generatedTime: new Date(),
+            errMsg: 'Some error happened during registration',
+            msg: 'Some error happened during registration',
+            type: 'MongodbError',
+          },
+        },
+      }); I
+    }
+
+
+
+  }
+  catch (err) {
+    return res.status(500).json({
+      status: -1,
+      data: {
+        err: {
+          generatedTime: new Date(),
+          errMsg: err.stack,
+          msg: err.message,
+          type: err.name,
+        },
+      },
+    });
+  }
+};
+const createTrends = async (req, res, next) => {
+  try {
+
+    const { project_code } = req.params;
+    const findProjectWithCode = await Projects.findOne({ code: project_code });
+    console.log(findProjectWithCode,'findProjectWithProjectCode----')
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        status: 0,
+        data: {
+          err: {
+            generatedTime: new Date(),
+            errMsg: errors
+              .array()
+              .map((err) => {
+                return `${err.msg}: ${err.param}`;
+              })
+              .join(' | '),
+            msg: 'Invalid data entered.',
+            type: 'ValidationError',
+          },
+        },
+      });
+    }
+    if (!findProjectWithCode) {
+      return res.status(404).json({
+        status: 0,
+        data: {
+          err: {
+            generatedTime: new Date(),
+            errMsg: 'Project does not exist',
+            msg: 'Project does not exist',
+            type: 'MongoDb Error',
+          },
+        },
+      });
+    }
+
+
+
+    const collectionName = findProjectWithCode.trends_collection_name;
+    console.log(collectionName,'collectionName-----')
+    const modelReference = require(`../model/${collectionName}`);
+    console.log(modelReference,'modelReference');
+    const { did, type,mode,pip,peep,mean_Airway,vti,vte,mve,mvi,fio2,respiratory_Rate,ie,tinsp,texp,averageLeak} = req.body;
+    if (!did || !type ||!mode|| !pip|| !peep|| !mean_Airway|| !vti|| !vte|| !mve|| !mvi|| !fio2|| !respiratory_Rate|| !ie|| !tinsp|| !texp|| !averageLeak) {
+      return res.status(400).json({
+        status: 0,
+        data: {
+          err: {
+            generatedTime: new Date(),
+            errMsg: 'Please fill all the details.',
+            msg: 'Please fill all the details.',
+            type: 'Client Error',
+          },
+        },
+      });
+
+    }
+    const trends = await new modelReference({
+      did:did,
+       type:type,
+       mode:mode,
+       pip:pip,
+       peep:peep,
+       mean_Airway:mean_Airway,
+       vti:vti,
+       vte:vte,
+       mve:mve,
+       mvi:mvi,
+       fio2:fio2,
+       respiratory_Rate:respiratory_Rate,
+       ie:ie,
+       tinsp:tinsp,
+       texp:texp,
+       averageLeak:averageLeak
+    });
+    const SaveTrends = await trends.save(trends);
+    if (SaveTrends) {
+      res.status(201).json({
+        status: 1,
+        data: { eventCounts: SaveTrends.length },
+        message: 'Trends add!',
 
       });
     }
@@ -2601,19 +2722,6 @@ const getCrashOccurrenceByLogMsgWithDeviceId = async (req, res) => {
         }
       });
     }
-    // if (!projectCode) {
-    //   return res.status(400).json({
-    //     status: 0,
-    //     data: {
-    //       err: {
-    //         generatedTime: new Date(),
-    //         errMsg: 'Project code not provided.',
-    //         msg: 'Project code not provided.',
-    //         type: 'Mongodb Error',
-    //       },
-    //     },
-    //   });
-    // }
 
 
     if (!req.query.logMsg) {
@@ -2901,6 +3009,7 @@ module.exports = {
   createLogs,
   createLogsV2,
   createAlerts,
+  createTrends,
   getFilteredLogs,
   getAlertsById,
   getEventsById,

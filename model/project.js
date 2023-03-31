@@ -31,6 +31,12 @@ const projectSchema = mongoose.Schema({
         unique:true,
         required:[true,'event collection name is require']
     },
+    trends_collection_name:{
+        type:String,
+        unique:true,
+        required:[true,'trends collection name is require']
+
+    },
     reportEmail: {
         type: [Object],
         // unique:true,

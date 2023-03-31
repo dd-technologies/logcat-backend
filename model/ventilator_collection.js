@@ -17,8 +17,12 @@
             {
                 did:{
                     type:String,
-                    requuired:[true,'did is required.']
+                    required:[true,'Device id is required.']
 
+                },
+                date:{
+                    type:String,
+                    required:[true,'Date is required']
                 },
                 version: {
                     type: String,
@@ -29,15 +33,22 @@
                   enum: ["001","002"],
                   required: [true, "Atleast one model required."]
                 },
-                device:{ type: mongoose.Schema.Types.ObjectId, ref: 'Device' },
-                log:logs
+                device:{ type:String, 
+                  ref: 'did' },
+                log:logs,
+                // state:{
+                //   type:String,
+                //   required:[true,"state is required"]
+                // },
+                
             },
+         
             schemaOptions
         )
 
         ventilator_collectionSchema.index({'type': 1})
                 
-        const ventilator_collection = mongoose.model('ventilator_collection', ventilator_collectionSchema);
+        const ventilator_collection = mongoose.model('ventilator_collection', ventilator_collectionSchema)
         
         module.exports = ventilator_collection
         
