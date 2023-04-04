@@ -505,6 +505,80 @@ const getAlertsById = async (req, res) => {
 
   }
 }
+const getTrendsById = async (req, res) => {
+  try {
+    const { did } = req.params;
+    const findDeviceById = await trends_ventilator_collection.find({ did: did });
+    if (!findDeviceById) {
+      return res.status(404).json({
+        status: 0,
+        data: {
+
+          err: {
+            generatedTime: new Date(),
+            errMsg: 'device not found',
+            msg: 'device not found',
+            type: 'Client Error',
+          },
+        },
+      });
+    }
+    console.log(findDeviceById,"device by id");
+    if(!did){
+      return res.status(404).json({
+        status:0,
+        data:{
+          err:{
+            generatedTime:new Date(),
+            errMsg:'deviceId not found',
+            msg:'deviceId not found',
+            type:'Client Error',
+          },
+        },
+      });
+    }
+
+    //console.log(findDeviceById, 'findDeviceById');
+    if (!findDeviceById) {
+      return res.status(404).json({
+        status: 0,
+        data: {
+          err: {
+            generatedTime: new Date(),
+            errMsg: 'device not found',
+            msg: 'device not found',
+            type: 'Client Error',
+          },
+        },
+      });
+    }
+    // const collectionName=require(`../model/${findDeviceById.collection_name}.js`);
+    // console.log(collectionName,'collectionName');
+    return res.status(200).json({
+      status: 1,
+      data: {
+        findDeviceById: findDeviceById
+      },
+      message: 'successfull'
+    });
+
+  }
+  catch (err) {
+    return res.status(500).json({
+      status: -1,
+      data: {
+        err: {
+          generatedTime: new Date(),
+          errMsg: err.stack,
+          msg: err.message,
+          type: err.name,
+        },
+      },
+    });
+
+
+  }
+}
 const getLogsById = async (req, res) => {
   try {
     const { device } = req.params;
@@ -884,7 +958,7 @@ const createTrends = async (req, res, next) => {
 
     const { project_code } = req.params;
     const findProjectWithCode = await Projects.findOne({ code: project_code });
-    console.log(findProjectWithCode,'findProjectWithProjectCode----')
+    //console.log(findProjectWithCode,'findProjectWithProjectCode----')
 
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -1001,6 +1075,109 @@ const createTrends = async (req, res, next) => {
 };
 
 
+const getTrendsWithFilter = async (req, res) => {
+  try {
+    const { projectCode } = req.params;
+
+    if (!req.query.projectType) {
+      return res.status(400).json({
+        status: 0,
+        data: {
+          err: {
+            generatedTime: new Date(),
+            errMsg: 'Project type is required',
+            msg: 'Project type is required',
+            type: 'Client Error',
+          },
+        },
+      });
+    }
+
+    const isProjectExist = await Projects.findOne({ code: projectCode });
+    if (!isProjectExist) {
+      return res.status(404).json({
+        status: 0,
+        data: {
+          err: {
+            generatedTime: new Date(),
+            errMsg: 'Project not found.',
+            msg: 'Project not found.',
+            type: 'Internal Server Error',
+          },
+        },
+      });
+    }
+
+    const collectionName = require(`../model/${isProjectExist.trends_collection_name}.js`);
+
+    let dt = new Date(req.query.endDate);
+    dt.setDate(dt.getDate() + 1);
+
+    var sortOperator = { $sort: {} };
+    let sort = req.query.sort || '-createdAt';
+
+    sort.includes('-')
+      ? (sortOperator['$sort'][sort.replace('-', '')] = -1)
+      : (sortOperator['$sort'][sort] = 1);
+
+    var matchOperator = {
+      $match: {
+        createdAt: {
+          $gte: new Date(req.query.startDate),
+          $lte: dt,
+        },
+        type: req.query.projectType,
+      },
+    };
+
+    let page = parseInt(req.query.page) || 1;
+    let limit = parseInt(req.query.limit) || 500;
+    let skip = (page - 1) * limit;
+    //console.log(sortOperator);
+
+    const data = await collectionName.aggregate([
+      {
+        $facet: {
+          totalRecords: [
+            matchOperator,
+            {
+              $count: 'total',
+            },
+          ],
+          data: [
+            matchOperator,
+            sortOperator,
+            { $skip: skip },
+            { $limit: limit },
+          ],
+        },
+      },
+    ]);
+    //console.log(data,'data');
+
+    return res.status(200).json({
+      status: 1,
+      message: 'Getting all trends',
+      data: {
+        count: data[0]?.totalRecords[0]?.total,
+        pageLimit: data[0]?.data.length,
+        alerts: data[0]?.data,
+      },
+    });
+  } catch (err) {
+    return res.status(500).json({
+      status: -1,
+      data: {
+        err: {
+          generatedTime: new Date(),
+          errMsg: err.stack,
+          msg: err.message,
+          type: err.name,
+        },
+      },
+    });
+  }
+};
 /**
  * desc     get project withpt filter
  * api      @/api/logger/projects/getDetails/:projectCode
@@ -3012,6 +3189,8 @@ module.exports = {
   createTrends,
   getFilteredLogs,
   getAlertsById,
+  getTrendsById,
+  getTrendsWithFilter,
   getEventsById,
   getAlertsWithFilter,
   getEventsWithFilter,
