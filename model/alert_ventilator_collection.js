@@ -39,11 +39,15 @@
                     date: {
                       type: String,
                       required: [true, 'Date time is required']
-                    }
+                    },
+                    priority:{
+                      type:String,
+                      required:[true,'priority is required']
+                    },
                 },
                 priority:{
                   type:String,
-                  required:[true,'priority is required']
+                  default: "",
                 },
                 // date:{
                 //   type:Date,

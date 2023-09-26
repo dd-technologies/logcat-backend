@@ -351,7 +351,7 @@ const getAlertsById = async (req, res) => {
       limit = 9999;
     }
 
-    const findDeviceById = await alert_ventilator_collection.find({ did: did }).sort({_id:-1});
+    const findDeviceById = await alert_ventilator_collection.find({ did: did }).sort({"ack.date":-1});
 
     //console.log(findDeviceById, 'findDeviceById');
     if (!findDeviceById) {
@@ -645,22 +645,65 @@ const getAllDeviceId = async (req, res) => {
       limit = 99999;
     }
     
+    // if (req.query.search && req.query.search !== "undefined") {
+    //   var activeDevices = await statusModel.find({deviceId: { $regex: ".*" + req.query.search + ".*", $options: "i" }}, { __v:0 }).sort({updatedAt:-1});
+    //   if (activeDevices.length < 1) {
+    //     res.status(400).json({
+    //       statusCode: 404,
+    //       statusValue: "FAIL",
+    //       message: "data not found.",
+    //       data: { data: allDevices, }
+    //     })
+    //   }
+    //   var finalArr = activeDevices;
 
-    var activeDevices = await statusModel.find({ message:"ACTIVE", deviceId: { $regex: ".*" + search + ".*", $options: "i" }, }, { __v:0 }).sort({updatedAt:-1});
-    var inactiveDevices = await statusModel.find({ message:"INACTIVE", deviceId: { $regex: ".*" + search + ".*", $options: "i" }, }, { __v:0 }).sort({updatedAt:-1});
-    let finalArr = [...activeDevices,...inactiveDevices]
+    //   var key = "deviceId";
+    // const arrayUniqueByKey = [...new Map(finalArr.map(item => [item[key], item])).values()]
+    // // console.log('array:',arrayUniqueByKey)
+    // // const allData = await statusModel.find({$in :[finalArr]})
     
-    let key = "deviceId";
-    const arrayUniqueByKey = [...new Map(finalArr.map(item => [item[key], item])).values()]
+    // const paginateArray =  (arrayUniqueByKey, page, limit) => {
+    //   const skip = arrayUniqueByKey.slice((page - 1) * limit, page * limit);
+    //   return skip;
+    // };
+
+    //   var allDevices = paginateArray(arrayUniqueByKey, page, limit)
+    //   if (arrayUniqueByKey.length > 0) {
+    //     return res.status(200).json({
+    //       status: 200,
+    //       statusValue: "SUCCESS",
+    //       message: "Event lists has been retrieved successfully.",
+    //       data: { data: allDevices, },
+    //       totalDataCount: arrayUniqueByKey.length,
+    //       totalPages: Math.ceil( (arrayUniqueByKey.length)/ limit),
+    //       currentPage: page
+    //     })
+    //   }
+    // }
+    
+
+    var activeDevices = await statusModel.find({ message:"ACTIVE" }, { __v:0 }).sort({updatedAt:-1});
+    var inactiveDevices = await statusModel.find({ message:"INACTIVE" }, { __v:0 }).sort({updatedAt:-1});
+    var finalArr = [...activeDevices,...inactiveDevices]
+    
+    var key = "deviceId";
+    if (req.query.search && req.query.search !== "undefined") {
+      finalArr = await statusModel.find({deviceId: { $regex: ".*" + search + ".*", $options: "i" }},{__v:0}).sort({updatedAt:-1});
+    }
+    // for search
+    
+
+    let arrayUniqueByKey = [...new Map(finalArr.map(item => [item[key], item])).values()];
     // console.log('array:',arrayUniqueByKey)
     // const allData = await statusModel.find({$in :[finalArr]})
+    // console.log(111, arrayUniqueByKey)
     
     const paginateArray =  (arrayUniqueByKey, page, limit) => {
       const skip = arrayUniqueByKey.slice((page - 1) * limit, page * limit);
       return skip;
     };
 
-    let allDevices = paginateArray(arrayUniqueByKey, page, limit)
+    var allDevices = paginateArray(arrayUniqueByKey, page, limit)
     if (arrayUniqueByKey.length > 0) {
       return res.status(200).json({
         status: 200,
@@ -702,7 +745,6 @@ const createAlerts = async (req, res, next) => {
     const { project_code } = req.params;
     // check project exist or not
     const findProjectWithCode = await Projects.findOne({ code: project_code });
-
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({
@@ -747,17 +789,17 @@ const createAlerts = async (req, res, next) => {
           msg: ac.msg,
           code: ac.code,
           date: ac.timestamp,
+          priority: ac.priority,
         },
         type: type,
         priority: priority,
         date: date
 
-
       });
 
       return putDataIntoLoggerDb.save(putDataIntoLoggerDb);
     });
-
+    
     let alerts = await Promise.allSettled(dbSavePromise);
     //console.log(alerts,'alerts');
 

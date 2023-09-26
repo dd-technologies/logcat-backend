@@ -5,7 +5,7 @@ const path = require('path');
 const deviceController = require('../controller/deviceController');
 const locationController = require('../controller/locationController');
 const router = express.Router();
-const { isAuth } = require("../middleware/authMiddleware.js");
+const { isAuth, isAdmin } = require("../middleware/authMiddleware.js");
 const File = require("../model/File.js");
 
 
