@@ -18,6 +18,7 @@ const {
   createLogs,
   createLogsV2,
   createAlerts,
+  createAlertsNew,
   createTrends,
   getLogsByLogType,
   dateWiseCrashCount,
@@ -124,6 +125,11 @@ router.post("/alerts/:project_code",
   body('ack.*.code').notEmpty(),
   body('ack.*.timestamp').notEmpty(),
   createAlerts);
+
+  // New alerts or alarm api for new ventilators
+  router.post("/alerts-new/:project_code",
+  createAlertsNew);
+
   router.post("/events/:project_code",
   body('did').notEmpty(),
   body('type').notEmpty(),

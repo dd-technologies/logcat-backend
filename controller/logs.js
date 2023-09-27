@@ -627,6 +627,8 @@ const getEventsById = async (req, res) => {
   }
 }
 
+
+// Get all deviceId
 const getAllDeviceId = async (req, res) => {
   try {
     
@@ -645,59 +647,20 @@ const getAllDeviceId = async (req, res) => {
       limit = 99999;
     }
     
-    // if (req.query.search && req.query.search !== "undefined") {
-    //   var activeDevices = await statusModel.find({deviceId: { $regex: ".*" + req.query.search + ".*", $options: "i" }}, { __v:0 }).sort({updatedAt:-1});
-    //   if (activeDevices.length < 1) {
-    //     res.status(400).json({
-    //       statusCode: 404,
-    //       statusValue: "FAIL",
-    //       message: "data not found.",
-    //       data: { data: allDevices, }
-    //     })
-    //   }
-    //   var finalArr = activeDevices;
-
-    //   var key = "deviceId";
-    // const arrayUniqueByKey = [...new Map(finalArr.map(item => [item[key], item])).values()]
-    // // console.log('array:',arrayUniqueByKey)
-    // // const allData = await statusModel.find({$in :[finalArr]})
-    
-    // const paginateArray =  (arrayUniqueByKey, page, limit) => {
-    //   const skip = arrayUniqueByKey.slice((page - 1) * limit, page * limit);
-    //   return skip;
-    // };
-
-    //   var allDevices = paginateArray(arrayUniqueByKey, page, limit)
-    //   if (arrayUniqueByKey.length > 0) {
-    //     return res.status(200).json({
-    //       status: 200,
-    //       statusValue: "SUCCESS",
-    //       message: "Event lists has been retrieved successfully.",
-    //       data: { data: allDevices, },
-    //       totalDataCount: arrayUniqueByKey.length,
-    //       totalPages: Math.ceil( (arrayUniqueByKey.length)/ limit),
-    //       currentPage: page
-    //     })
-    //   }
-    // }
-    
-
     var activeDevices = await statusModel.find({ message:"ACTIVE" }, { __v:0 }).sort({updatedAt:-1});
     var inactiveDevices = await statusModel.find({ message:"INACTIVE" }, { __v:0 }).sort({updatedAt:-1});
     var finalArr = [...activeDevices,...inactiveDevices]
     
+    // For search
     var key = "deviceId";
     if (req.query.search && req.query.search !== "undefined") {
       finalArr = await statusModel.find({deviceId: { $regex: ".*" + search + ".*", $options: "i" }},{__v:0}).sort({updatedAt:-1});
     }
-    // for search
-    
 
+    // Remove duplicate devices
     let arrayUniqueByKey = [...new Map(finalArr.map(item => [item[key], item])).values()];
-    // console.log('array:',arrayUniqueByKey)
-    // const allData = await statusModel.find({$in :[finalArr]})
-    // console.log(111, arrayUniqueByKey)
     
+    // For pagination
     const paginateArray =  (arrayUniqueByKey, page, limit) => {
       const skip = arrayUniqueByKey.slice((page - 1) * limit, page * limit);
       return skip;
@@ -750,7 +713,7 @@ const createAlerts = async (req, res, next) => {
       return res.status(400).json({
         status: 0,
         data: {
-          err: {
+          err: { 
             generatedTime: new Date(),
             errMsg: errors
               .array()
@@ -789,12 +752,10 @@ const createAlerts = async (req, res, next) => {
           msg: ac.msg,
           code: ac.code,
           date: ac.timestamp,
-          priority: ac.priority,
         },
         type: type,
         priority: priority,
         date: date
-
       });
 
       return putDataIntoLoggerDb.save(putDataIntoLoggerDb);
@@ -846,6 +807,116 @@ const createAlerts = async (req, res, next) => {
     });
   }
 };
+
+/**
+ * desc     Alert
+ * api      POST @/api/logger/logs/alerts-new/:projectCode
+ */
+const createAlertsNew = async (req, res) => {
+  try {
+    const { project_code } = req.params;
+    // check project exist or not
+    const findProjectWithCode = await Projects.findOne({ code: project_code });
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        status: 0,
+        data: {
+          err: { 
+            generatedTime: new Date(),
+            errMsg: errors
+              .array()
+              .map((err) => {
+                return `${err.msg}: ${err.param}`;
+              })
+              .join(' | '),
+            msg: 'Invalid data entered.',
+            type: 'ValidationError',
+          },
+        },
+      });
+    }
+
+    if (!findProjectWithCode) {
+      return res.status(404).json({
+        status: 0,
+        data: {
+          err: {
+            generatedTime: new Date(),
+            errMsg: 'Project does not exist',
+            msg: 'Project does not exist',
+            type: 'MongoDb Error',
+          },
+        },
+      });
+    }
+    const collectionName = findProjectWithCode.alert_collection_name;
+
+    const modelReference = require(`../model/${collectionName}`);
+    const { did, type, ack, date } = req.body;
+    let dbSavePromise = ack.map(async (ac) => {
+      const putDataIntoLoggerDb = await new modelReference({
+        did: did,
+        ack: {
+          msg: ac.msg,
+          code: ac.code,
+          date: ac.timestamp,
+        },
+        type: type,
+        priority: ac.priority,
+        date: date
+      });
+
+      return putDataIntoLoggerDb.save(putDataIntoLoggerDb);
+    });
+    
+    let alerts = await Promise.allSettled(dbSavePromise);
+    //console.log(alerts,'alerts');
+
+    var alertsErrArr = [];
+    var alertsErrMsgArr = [];
+
+    alerts.map((alert) => {
+      alertsErrArr.push(alert.status);
+      if (alert.status === 'rejected') {
+        alertsErrMsgArr.push(alert.reason.message);
+      }
+    });
+
+    if (!alertsErrArr.includes('rejected')) {
+      return res.status(201).json({
+        status: 1,
+        data: { alertCount: alerts.length },
+        message: 'Successful',
+      });
+    } else {
+      res.status(400).json({
+        status: alertsErrArr.length === alerts.length ? -1 : 0,
+        data: {
+          err: {
+            generatedTime: new Date(),
+            errMsg: alertsErrMsgArr.join(' | '),
+            msg: `Error saving ${alertsErrMsgArr.length} out of ${alerts.length} alert(s)`,
+            type: 'ValidationError',
+          },
+        },
+      });
+    }
+  } catch (err) {
+    return res.status(500).json({
+      status: -1,
+      data: {
+        err: {
+          generatedTime: new Date(),
+          errMsg: err.stack,
+          msg: err.message,
+          type: err.name,
+        },
+      },
+    });
+  }
+}
+
 
 const createEvents = async (req, res, next) => {
   try {
@@ -1054,9 +1125,6 @@ const createTrends = async (req, res, next) => {
         },
       }); I
     }
-
-
-
   }
   catch (err) {
     return res.status(500).json({
@@ -1177,12 +1245,12 @@ const getTrendsWithFilter = async (req, res) => {
     });
   }
 };
+
 /**
  * desc     get project withpt filter
  * api      @/api/logger/projects/getDetails/:projectCode
  *
  */
-
 const getFilteredLogs = async (req, res) => {
   try {
     const { projectCode } = req.params;
@@ -1302,12 +1370,12 @@ const getFilteredLogs = async (req, res) => {
   }
 };
 
+
 /**
  * desc     get project with filter
  * api      @/api/logger/projects/getDetails/:projectCode
  *
  */
-
 const getAlertsWithFilter = async (req, res) => {
   try {
     const { projectCode } = req.params;
@@ -1520,6 +1588,8 @@ const getEventsWithFilter = async (req, res) => {
     });
   }
 };
+
+
 const crashFreeUsersDatewise = async (req, res) => {
   try {
     const { projectCode } = req.params;
@@ -1697,6 +1767,7 @@ const crashFreeUsersDatewise = async (req, res) => {
   }
 };
 
+
 const crashlyticsData = async (req, res) => {
   try {
     const { projectCode } = req.params;
@@ -1873,6 +1944,8 @@ const crashlyticsData = async (req, res) => {
     });
   }
 };
+
+
 const crashlyticsData2 = async (req, res) => {
   try {
     const { did } = req.params;
@@ -2050,6 +2123,7 @@ const crashlyticsData2 = async (req, res) => {
   }
 };
 
+
 // UNUSED
 const getErrorCountByOSArchitecture = async (req, res) => {
   try {
@@ -2119,6 +2193,8 @@ const getErrorCountByOSArchitecture = async (req, res) => {
     });
   }
 };
+
+
 const getLogsByLogType = async (req, res) => {
   try {
     const { projectCode } = req.params;
@@ -2236,6 +2312,7 @@ const getLogsByLogType = async (req, res) => {
     });
   }
 };
+
 
 const dateWiseCrashCount = async (req, res) => {
   try {
@@ -3193,6 +3270,7 @@ const getErrorCountByVersion = async (req, res) => {
 module.exports = {
   createLogsV2,
   createAlerts,
+  createAlertsNew,
   createTrends,
   getFilteredLogs,
   getAlertsById,
