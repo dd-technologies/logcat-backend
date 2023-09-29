@@ -616,6 +616,11 @@ const getDispatchDataById = async (req, res) => {
   }
 }
 
+let redisClient = require("../config/redisInit");
+const activityModel = require('../model/activityModel');
+
+const JWTR = require("jwt-redis").default;
+const jwtr = new JWTR(redisClient);
 
 const getAboutByDeviceId = async (req, res) => {
   try {
@@ -683,8 +688,15 @@ const sendAndReceiveData = async (req, res) => {
   }
 }
 
+
 const assignedDeviceToUser = async (req, res) => {
   try {
+
+    const token = req.headers["authorization"].split(' ')[1];
+    const verified = await jwtr.verify(token, process.env.JWT_SECRET);
+    
+    console.log('resp2',verified.user)
+
     const findDevice = await RegisterDevice.find({ DeviceId: { $in: req.body.DeviceId }})
     .select({__v:0,_id:0,createdAt:0,updatedAt:0});
     if (findDevice.length === 0) {
@@ -714,12 +726,16 @@ const assignedDeviceToUser = async (req, res) => {
     deviceIds.map(async (items) => {
       await RegisterDevice.findOneAndUpdate({DeviceId:items},{isAssigned:true});
     })
+    // for logger user activity
+    await saveActivity(verified.user,'Device assigned successfully!',updateDoc);
+
     return res.status(200).json({
       statusCode: 200,
       statusValue: "SUCCESS",
       message: "Device assigned successfully.",
       data: updateDoc
     });
+    
   } catch (err) {
     res.status(500).json({
       statusCode: 500,
@@ -733,6 +749,12 @@ const assignedDeviceToUser = async (req, res) => {
   }
 }
 
+
+async function saveActivity(userId,action,msg) {
+  const userInfo = await User.findOne({_id:userId});
+  const data = await activityModel.create({userId:userId,email:userInfo.email,action:action,msg:msg});
+  data.save();
+}
 
 const getAssignedDeviceById = async (req, res) => {
   try {

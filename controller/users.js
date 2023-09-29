@@ -16,6 +16,7 @@ const sendEmail = require('../helper/sendEmail.js');
 const sendInBlueEmail = require('../helper/sendInBlueEmail.js');
 const errorHandler = require('../middleware/errorHandler.js');
 const sendOtp = require('../helper/sendOtp');
+const activityModel = require('../model/activityModel');
 
 /**
  * api      POST @/api/logger/register
@@ -600,6 +601,65 @@ const getUserProfileById = async (req, res) => {
   }
 }
 
+
+/**
+ * @desc - get all activities
+ * @api - /api/logger/users/user-activity
+ * @returns json data
+ */
+const getActivity = async (req, res) => {
+  try {
+    // Pagination
+    let { page, limit } = req.query;
+    if (!page || page === "undefined") {
+      page = 1;
+    }
+    if (!limit || limit === "undefined" || parseInt(limit) === 0) {
+      limit = 9999;
+    }
+    const skip = page > 0 ? (page - 1) * limit : 0
+
+    const getData = await activityModel.find({})
+    .select({_id:0,__v:0,updatedAt:0})
+    .sort({createdAt:-1})
+    .skip(skip)
+    .limit(limit);
+    
+    const count = await activityModel.find({})
+    .sort({createdAt:-1})
+    .countDocuments();
+
+    if (getData.length>0) {
+      return res.status(200).json({
+        statusCode:200,
+        statusValue:"SUCCESS",
+        message:"Users activity list get successfully.",
+        data:getData,
+        totalDataCount: count,
+        totalPages: Math.ceil(count / limit),
+        currentPage: page
+      })
+    }
+    return res.status(400).json({
+      statusCode: 400,
+      statusValue: "FAIL",
+      message: "Data not found.",
+      data: []
+    })
+  } catch (err) {
+    return res.status(500).json({
+      statusCode: 500,
+      statusValue: "FAIL",
+      message: "Internal server error",
+      data: {
+        generatedTime: new Date(),
+        errMsg: err.stack,
+      }
+    })
+  }
+}
+
+
 /**
  * @desc - get all users
  * @api - /api/logger/users-list
@@ -765,5 +825,6 @@ module.exports = {
   getAllUsers,
   changeUserType,
   verifyOtp,
-  generateNewPassword
+  generateNewPassword,
+  getActivity,
 };

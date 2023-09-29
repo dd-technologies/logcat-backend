@@ -57,6 +57,7 @@ const hospitalController = require("../controller/hospitalController");
 // Unprotected routes
 router.post("/:project_code", logController.createNewLog);
 
+
 router.post("/location/:project_code", locationController.saveNewLocation);
 router.get('/location/:deviceId/:project_code', locationController.getLocationByDeviceId);
 router.post('/calibration/:project_code', calibrationController.saveCalibrationData);
