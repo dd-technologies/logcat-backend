@@ -2,12 +2,15 @@ const express = require("express");
 const path = require("path");
 const cors = require("cors");
 const connectDB = require("./config/db.js");
+const logger = require("./config/logger.js");
 const morgan = require("morgan");
 require("dotenv").config({ path: "./.env" });
 const session = require("express-session");
 const bodyParser = require("body-parser");
 const nodemailer = require("nodemailer");
 const http = require("http");
+
+
 
 // sendin blue
 const Sib = require("sib-api-v3-sdk");
@@ -28,7 +31,7 @@ const deviceRouter = require("./route/deviceRouter.js");
 const patientRouter = require("./route/patientRouter.js");
 const hospitalRouter = require("./route/hospitalRoute");
 const projectRouter = require("./route/projectRouter.js");
-const {swaggerDocs} = require('./swagger.js');
+const productionRouter = require("./route/productionRoute.js");
 
 // creating connection with DB
 connectDB();
@@ -73,6 +76,7 @@ app.use("/devices", deviceRouter);
 app.use("/patient", patientRouter);
 app.use("/hospital", hospitalRouter);
 app.use("/projects", projectRouter);
+app.use("/production", productionRouter);
 
 // Logs Routing
 app.use("/api/logger/logs", logs);
@@ -165,8 +169,8 @@ io.on('connection', (socket) => {
 // Socket end
 
 server.listen(PORT, () =>
-  console.log(`active on port ${PORT} `)
-  // swaggerDocs(app, PORT)
+  logger.error(`Server is running on port : ${PORT}`)
+  
 );
 // module.exports = app.listen(PORT, () => console.log(`active on port ${PORT} `));
 

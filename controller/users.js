@@ -725,7 +725,7 @@ const getAllUsers = async (req, res) => {
 const changeUserType = async (req, res) => {
   try {
     const schema = Joi.object({
-      userType: Joi.string().valid('Admin', 'User', 'Dispatch').required()
+      userType: Joi.string().valid('Admin', 'User', 'Dispatch', 'Production').required()
     })
     let result = schema.validate(req.body);
     if (result.error) {

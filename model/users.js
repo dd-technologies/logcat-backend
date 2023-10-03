@@ -31,7 +31,7 @@ const userSchema = mongoose.Schema({
     userType:{
         type: String,
         required:true,
-        enum:["User", "Admin", "Owner", "Dispatch"],
+        enum:["User", "Admin", "Owner", "Dispatch", "Production"],
         default:"User",
     },
     isSuperAdmin:{
