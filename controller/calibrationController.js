@@ -79,12 +79,26 @@ const getCalibrationByDeviceId = async (req, res) => {
 
         // count documents
         const count = await calibrationModel.find({deviceId},{ "createdAt": 0, "updatedAt": 0, "__v": 0 }).countDocuments()
+        
+        var splitedArr = [];
+        let modifiedArr = getData.map((item) => { 
+            let objItem = {
+                _id:item._id,
+                deviceId:item.deviceId,
+                message:item.message,
+                date:item.date.split(' ')[0],
+                time:item.date.split(' ')[1],
+                name:item.name,
+            }
+            splitedArr.push(objItem)
+        })
+        // console.log(splitedArr)
         if (getData.length > 0)
         return res.status(200).json({
             statusCode: 200,
             statusValue:"SUCCESS",
             message:"Calibration data get successfully.",
-            data:getData,
+            data:splitedArr,
             totalDataCount: count,
             totalPages: Math.ceil(count / limit),
             currentPage: page

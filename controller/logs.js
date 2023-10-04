@@ -351,7 +351,7 @@ const getAlertsById = async (req, res) => {
       limit = 9999;
     }
 
-    const findDeviceById = await alert_ventilator_collection.find({ did: did }).sort({"ack.date":-1});
+    const findDeviceById = await alert_ventilator_collection.find({ did: did }).select({__v:0,createdAt:0,updatedAt:0}).sort({"ack.date":-1});
 
     //console.log(findDeviceById, 'findDeviceById');
     if (!findDeviceById) {
@@ -374,13 +374,29 @@ const getAlertsById = async (req, res) => {
       return skip;
     };
     let finalArrData = paginateArray(findDeviceById, page, limit);
+    var splitedArr = [];
+    let modifiedArr = finalArrData.map((item) => { 
+      let objItem = {
+        _id:item._id,
+        did:item.did,
+        type:item.type,
+        ack:{
+          msg:item.ack.msg,
+          code:item.ack.code,
+          date:item.ack.date.split('T')[0],
+          time:item.ack.date.split('T')[1],
+        },
+        priority:item.priority,
+      }
+      splitedArr.push(objItem)
+    })
 
     return res.status(200).json({
       status: 1,
       statusCode: 200,
       message: 'Data get successfully.',
       data: {
-        findDeviceById: finalArrData
+        findDeviceById: splitedArr
       },
       totalDataCount: findDeviceById.length,
       totalPages: Math.ceil( (findDeviceById.length)/ limit),
@@ -489,7 +505,7 @@ const getLogsById = async (req, res) => {
       limit = 9999;
     }
 
-    const findDeviceById = await logModel.find({ deviceId:device }).sort({_id:-1});
+    const findDeviceById = await logModel.find({ deviceId:device }).select({__v:0,createdAt:0,updatedAt:0}).sort({_id:-1});
     if (!findDeviceById) {
       return res.status(404).json({
         status: 0,
@@ -510,12 +526,26 @@ const getLogsById = async (req, res) => {
     };
     let finalArrData = paginateArray(findDeviceById, page, limit);
 
+    var splitedArr = [];
+    let modifiedArr = finalArrData.map((item) => { 
+      let objItem = {
+        _id:item._id,
+        deviceId:item.deviceId,
+        message:item.message,
+        version:item.version,
+        file:item.file,
+        date:item.date.split('T')[0],
+        time:item.date.split('T')[1],
+      }
+      splitedArr.push(objItem)
+    })
+
     return res.status(200).json({
       status: 1,
       statusCode: 200,
       message: 'Data get successfully.',
       data: {
-        findDeviceById: finalArrData,
+        findDeviceById: splitedArr,
       },
       totalDataCount: findDeviceById.length,
       totalPages: Math.ceil((findDeviceById.length)/limit),
@@ -551,7 +581,7 @@ const getEventsById = async (req, res) => {
       limit = 9999;
     }
 
-    const findDeviceById = await event_ventilator_collection.find({ did: did }).sort({_id:-1});
+    const findDeviceById = await event_ventilator_collection.find({ did: did }).select({createdAt:0, updatedAt:0, __v:0}).sort({_id:-1});
 
     const maxDate = new Date(
       Math.max(
@@ -597,12 +627,25 @@ const getEventsById = async (req, res) => {
       return skip;
     };
     let finalArrData = paginateArray(findDeviceById, page, limit)
-    
+    var splitedArr = [];
+    let modifiedArr = finalArrData.map((item) => { 
+      let objItem = {
+        _id:item._id,
+        did:item.did,
+        type:item.type,
+        message:item.message,
+        date:item.date.split('T')[0],
+        time:item.date.split('T')[1],
+      }
+      splitedArr.push(objItem)
+    })
+    // console.log(Arr)
+    // console.log(modifiedArr)
     return res.status(200).json({
       status: 1,
       statusCode: 200,
       data: {
-        findDeviceById: finalArrData,
+        findDeviceById: splitedArr,
       },
       message: 'successfull',
       //state:findDeviceById.find().sort({date:-1}).limit(1)

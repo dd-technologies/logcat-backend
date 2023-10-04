@@ -727,7 +727,10 @@ const assignedDeviceToUser = async (req, res) => {
       await RegisterDevice.findOneAndUpdate({DeviceId:items},{isAssigned:true});
     })
     // for logger user activity
-    await saveActivity(verified.user,'Device assigned successfully!',updateDoc);
+    const loggedInUser = await User.findById({_id:verified.user});
+    const normalUser = await User.findById({_id:req.body._id});
+    // console.log(userInfo);
+    await saveActivity(verified.user,'Device assigned successfully!',`${loggedInUser.email} has assigned new device to ${normalUser.email}`);
 
     return res.status(200).json({
       statusCode: 200,
