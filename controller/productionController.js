@@ -179,7 +179,6 @@ const updateProduction = async (req, res) => {
         })
         let result = schema.validate(req.body);
         if (result.error) {
-            console.log(req.body);
             return res.status(200).json({
                 status: 0,
                 statusCode: 400,
@@ -187,7 +186,7 @@ const updateProduction = async (req, res) => {
             })
         }
         // const project_code = req.params.project_code;
-        const updateDoc = await productionModel.findByIdAndUpdate({_id:req.body.id}, req.body, {upsert:true});
+        const updateDoc = await productionModel.findByIdAndUpdate({_id:req.body.id}, req.body, {upsert:true, new: true});
     
         if (!updateDoc) {
             return res.status(400).json({
