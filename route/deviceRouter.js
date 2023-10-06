@@ -14,6 +14,7 @@ router.post('/register', deviceController.createDevice);
 router.get('/', deviceController.getAllDevices);
 router.put('/update/:DeviceId', deviceController.updateDevice);
 router.get('/getdevice/:DeviceId', deviceController.getDeviceById);
+router.get('/get-details/:DeviceId', deviceController.getDeviceById);
 
 
 

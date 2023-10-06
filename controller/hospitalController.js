@@ -69,6 +69,22 @@ const saveHospital = async (req, res) => {
  */
 const getHospitalList = async (req, res) => {
     try {
+        if (!req.params.State) {
+            const data = await registeredHospitalModel.find({}, { __v: 0, createdAt: 0, updatedAt: 0 });
+            if (data.length == "") {
+                return res.status(404).json({
+                    statusCode: 404,
+                    statusValue: "FAIL",
+                    message: "Data not found."
+                })
+            } 
+            return res.status(200).json({
+                statusCode: 200,
+                statusValue: "SUCCESS",
+                message: "Hospital data get successfully.",
+                data: data
+            })
+        }
         const data = await registeredHospitalModel.find({State:req.params.State}, { __v: 0, createdAt: 0, updatedAt: 0 });
         if (data.length == "") {
             return res.status(404).json({

@@ -609,6 +609,11 @@ const getUserProfileById = async (req, res) => {
  */
 const getActivity = async (req, res) => {
   try {
+    // for search
+    var search = "";
+    if (req.query.search && req.query.search !== "undefined") {
+      search = req.query.search;
+    }
     // Pagination
     let { page, limit } = req.query;
     if (!page || page === "undefined") {
@@ -619,13 +624,13 @@ const getActivity = async (req, res) => {
     }
     const skip = page > 0 ? (page - 1) * limit : 0
 
-    const getData = await activityModel.find({})
+    const getData = await activityModel.find({email:{ $regex: ".*" + search + ".*", $options: "i" }})
     .select({_id:0,__v:0,updatedAt:0})
     .sort({createdAt:-1})
     .skip(skip)
     .limit(limit);
     
-    const count = await activityModel.find({})
+    const count = await activityModel.find({email:{ $regex: ".*" + search + ".*", $options: "i" }})
     .sort({createdAt:-1})
     .countDocuments();
 
@@ -718,6 +723,63 @@ const getAllUsers = async (req, res) => {
 }
 
 /**
+ * @desc - get all users
+ * @api - /api/logger/users-list
+ * @returns json data
+ */
+const getServiceEngList = async (req, res) => {
+  try {
+    // Pagination
+    let { page, limit } = req.query;
+    if (!page || page === "undefined") {
+      page = 1;
+    }
+    if (!limit || limit === "undefined" || parseInt(limit) === 0) {
+      limit = 1000;
+    }
+    const skip = page > 0 ? (page - 1) * limit : 0
+    const getUsers = await User.find({userType:"Service-Engineer"})
+    .select({ passwordHash: 0, __v: 0, createdAt: 0, updatedAt: 0, otp: 0 })
+    .sort({createdAt:-1})
+    .skip(skip)
+    .limit(limit);
+
+    // Count 
+    const count = await User.find({userType:"Service-Engineer"})
+    .sort({createdAt:-1})
+    .countDocuments();
+
+    if (getUsers.length>0) {
+      return res.status(200).json({
+        statusCode:200,
+        statusValue:"SUCCESS",
+        message:"Users list get successfully.",
+        data:getUsers,
+        totalDataCount: count,
+        totalPages: Math.ceil(count / limit),
+        currentPage: page
+      })
+    }
+    return res.status(400).json({
+      statusCode: 400,
+      statusValue: "FAIL",
+      message: "Data not found.",
+      data: []
+    })
+  } catch (err) {
+    return res.status(500).json({
+      statusCode: 500,
+      statusValue: "FAIL",
+      message: "Internal server error",
+      data: {
+        generatedTime: new Date(),
+        errMsg: err.stack,
+      }
+    })
+  }
+}
+
+/**
  * @desc - change user type by userId
  * @api - PUT /api/logger/change-userType/userId
  * @returns json data
@@ -725,7 +787,7 @@ const getAllUsers = async (req, res) => {
 const changeUserType = async (req, res) => {
   try {
     const schema = Joi.object({
-      userType: Joi.string().valid('Admin', 'User', 'Dispatch', 'Production').required()
+      userType: Joi.string().valid('Admin', 'User', 'Dispatch', 'Production', 'Support', 'Service-Engineer').required()
     })
     let result = schema.validate(req.body);
     if (result.error) {
@@ -823,6 +885,7 @@ module.exports = {
   getUserByUserId,
   getUserProfileById,
   getAllUsers,
+  getServiceEngList,
   changeUserType,
   verifyOtp,
   generateNewPassword,

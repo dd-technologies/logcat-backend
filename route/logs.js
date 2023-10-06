@@ -73,7 +73,7 @@ router.get('/get-dispatch-databyId/:deviceId', deviceController.getDispatchDataB
 router.get('/about/:deviceId', isAuth, deviceController.getAboutByDeviceId);
 router.get('/dynamicDeviceId/:deviceId', deviceController.sendAndReceiveData);
 router.put('/assignedDeviceToUser', isAuth, isAdmin, deviceController.assignedDeviceToUser);
-router.get('/getAssignedDeviceByUserId/:userId', isAuth, isAdmin, deviceController.getAssignedDeviceById);
+router.get('/getAssignedDeviceByUserId/:userId', isAuth, deviceController.getAssignedDeviceById);
 router.put('/deleteAssignedDeviceById', isAuth, isAdmin, deviceController.deleteAssignedDeviceFromUser);
 router.get('/adminDashboardDataCount', deviceController.getAdminDashboardDataCount);
 router.get('/getTotalDevicesCount/:filterType', deviceController.getTotalDevicesDataCount);

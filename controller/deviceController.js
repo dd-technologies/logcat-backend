@@ -29,9 +29,9 @@ const createDevice = async (req, res) => {
       Doctor_Name: Joi.string().required(),
       IMEI_NO: Joi.string().required(),
       Bio_Med: Joi.string().required(),
-      
     })
     let result = schema.validate(req.body);
+    
     if (result.error) {
       return res.status(200).json({
         status: 0,
@@ -39,6 +39,13 @@ const createDevice = async (req, res) => {
         message: result.error.details[0].message,
       })
     }
+
+    // for logger user activity
+    // const token = req.headers["authorization"].split(' ')[1];
+    // const verified = await jwtr.verify(token, process.env.JWT_SECRET);
+    // const loggedInUser = await User.findById({_id:verified.user});
+    // const normalUser = await User.findById({_id:req.body._id});
+
     const deviceData = await Device.findOneAndUpdate(
       { DeviceId: req.body.DeviceId },
       req.body,
@@ -117,7 +124,6 @@ const updateDevice = async (req, res) => {
  */
 const getDeviceById = async (req, res) => {
   try {
-
     const { DeviceId } = req.params;
     if (!DeviceId) {
       return res.status(400).json({
@@ -127,12 +133,30 @@ const getDeviceById = async (req, res) => {
       })
     }
 
-    const data = await Device.findOne({ DeviceId: DeviceId }, { "createdAt": 0, "updatedAt": 0, "__v": 0 });
+    let data = await Device.findOne({ DeviceId: DeviceId }, { "createdAt": 0, "updatedAt": 0, "__v": 0 });
+    const data2 = await statusModel.findOne({deviceId:DeviceId},{ "createdAt": 0, "updatedAt": 0, "__v": 0 });
+    data = {
+      '_id':data._id,
+      'DeviceId':data.DeviceId,
+      'Bio_Med':data.Bio_Med,
+      'Department_Name':data.Department_Name,
+      'Doctor_Name':data.Doctor_Name,
+      'Hospital_Name':data.Hospital_Name,
+      'IMEI_NO':data.IMEI_NO,
+      'Status':data.Status,
+      'Ward_No':data.Ward_No,
+      'isAssigned':data.isAssigned, 
+      'address':data2.address, 
+      'health':data2.health,
+      'last_hours':data2.last_hours,
+      'total_hours':data2.total_hours,
+    };
     if (!data) {
       return res.status(404).json({
         statusCode: 400,
         statusValue: "FAIL",
-        message: "Data not found with this given deviceId."
+        message: "Data not found with this given deviceId.",
+        data: {},
       })
     }
 
@@ -695,7 +719,7 @@ const assignedDeviceToUser = async (req, res) => {
     const token = req.headers["authorization"].split(' ')[1];
     const verified = await jwtr.verify(token, process.env.JWT_SECRET);
     
-    console.log('resp2',verified.user)
+    // console.log('resp2',verified.user)
 
     const findDevice = await RegisterDevice.find({ DeviceId: { $in: req.body.DeviceId }})
     .select({__v:0,_id:0,createdAt:0,updatedAt:0});
@@ -769,9 +793,19 @@ const getAssignedDeviceById = async (req, res) => {
         message: "User Id is required!"
       })
     }
-    const data = await assignDeviceTouserModel.find({userId:mongoose.Types.ObjectId(userId)})
+    let data = await assignDeviceTouserModel.find({userId:mongoose.Types.ObjectId(userId)})
     .select({_id:0, __v:0, createdAt:0, updatedAt:0})
     .sort({ createdAt: -1 });
+    // var tempArr = data[0].Assigned_Devices;
+    // tempArr.map(async (item) => {
+        
+    // })
+    // console.log(123,)
+    // data[0].Assigned_Devices.map(async (item) => {
+    //   var eventsData = await statusModel.findOne({deviceId:item.DeviceId})
+    //   return tempArr.push(eventsData)
+    // })
+   
     if (!data.length) {
       return res.status(404).json({
         statusCode: 404,
@@ -802,6 +836,10 @@ const getAssignedDeviceById = async (req, res) => {
 
 const deleteAssignedDeviceFromUser = async (req, res) => {
   try {
+    // for logger activity
+    const token = req.headers["authorization"].split(' ')[1];
+    const verified = await jwtr.verify(token, process.env.JWT_SECRET);
+
     const removeData = await assignDeviceTouserModel.updateOne(
       { userId: mongoose.Types.ObjectId(req.body.userId) },
       { $pull: { Assigned_Devices: { DeviceId:req.body.DeviceId } } },
@@ -821,7 +859,14 @@ const deleteAssignedDeviceFromUser = async (req, res) => {
     })
     const checkData = await assignDeviceTouserModel.findOne({userId:req.body.userId})
     let arrLength = checkData.Assigned_Devices
+
+    // for logger user activity
+    const loggedInUser = await User.findById({_id:verified.user});
+    const normalUser = await User.findById({_id:req.body.userId});
+
     if (arrLength == 0 || arrLength == undefined) {
+      
+      await saveActivity(verified.user,'Device assigned remove successfully!',`${loggedInUser.email} has removed device to ${normalUser.email}`);
       await assignDeviceTouserModel.findOneAndRemove({userId:req.body.userId})
       return res.status(200).json({
         statusCode: 200,
@@ -830,6 +875,7 @@ const deleteAssignedDeviceFromUser = async (req, res) => {
         data:removeData
       });
     }
+    await saveActivity(verified.user,'Device assigned remove successfully!',`${loggedInUser.email} has removed device to ${normalUser.email}`);
     return res.status(200).json({
       statusCode: 200,
       statusValue: "SUCCESS",

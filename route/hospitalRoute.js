@@ -8,6 +8,8 @@ const hospitalController = require('../controller/hospitalController');
 
 router.post('/register-hospital', hospitalController.saveHospital)
 router.get('/hospital-list/:State', hospitalController.getHospitalList);
+router.get('/hospital-list', hospitalController.getHospitalList);
+
 
 router.get('/get-country-list', hospitalController.getCountryList);
 router.get('/get-state-list/:name', hospitalController.getStateListByCountryName);

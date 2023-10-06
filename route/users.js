@@ -16,6 +16,7 @@ const {
     getUserByUserId,
     getUserProfileById,
     getAllUsers,
+    getServiceEngList,
     changeUserType,
     getActivity,
 } = require('../controller/users.js')
@@ -50,6 +51,8 @@ router.get('/auth/logout', isAuth, logoutUser)
 // router.get('/users', isAuth, profileCache(10), getUserByUserId)
 router.get('/users/:userId', isAuth, getUserProfileById);
 router.get('/users-list', isAuth, isAdmin, getAllUsers);
+router.get('/service-eng-list', getServiceEngList);
+
 router.put('/change-userType/:userId', isAuth, isAdmin, changeUserType);
 router.put('/users/update', isAuth, updateUserProfile);
 router.put("/users/changepassword", isAuth, userPasswordChange);
