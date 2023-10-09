@@ -155,13 +155,13 @@ router.get(
   crashFreeUsersDatewise
 );
 router.get("/alerts/:projectCode", isAuth, getAlertsWithFilter);
-router.get("/events/:projectCode",isAuth,getEventsWithFilter);
-router.get("/trends/:projectCode",isAuth,getTrendsWithFilter);
-router.get("/deviceTrends/:did",getTrendsById);
-router.get("/deviceAlerts/:did",getAlertsById);
-router.get("/deviceEvents/:did",getEventsById);
-router.get("/deviceLogs/:device",getLogsById);
-router.get("/Allevents/Events",getAllDeviceId);
+router.get("/events/:projectCode",isAuth, getEventsWithFilter);
+router.get("/trends/:projectCode",isAuth, getTrendsWithFilter);
+router.get("/deviceTrends/:did", getTrendsById);
+router.get("/deviceAlerts/:did", getAlertsById);
+router.get("/deviceEvents/:did", getEventsById);
+router.get("/deviceLogs/:device", getLogsById);
+router.get("/Allevents/Events", getAllDeviceId);
 
 
 // router.get("/example", async (req,res)=>{

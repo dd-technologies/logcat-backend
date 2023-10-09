@@ -32,6 +32,7 @@ const patientRouter = require("./route/patientRouter.js");
 const hospitalRouter = require("./route/hospitalRoute");
 const projectRouter = require("./route/projectRouter.js");
 const productionRouter = require("./route/productionRoute.js");
+const supportRouter = require("./route/supportRoute.js");
 
 // creating connection with DB
 connectDB();
@@ -77,6 +78,7 @@ app.use("/patient", patientRouter);
 app.use("/hospital", hospitalRouter);
 app.use("/projects", projectRouter);
 app.use("/production", productionRouter);
+app.use("/support/", supportRouter);
 
 // Logs Routing
 app.use("/api/logger/logs", logs);

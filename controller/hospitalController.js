@@ -61,6 +61,107 @@ const saveHospital = async (req, res) => {
 }
 
 
+const updateHospital = async (req, res) => {
+    try {
+        const schema = Joi.object({
+            id: Joi.string().required(),
+            Hospital_Name: Joi.string().required(),
+            Hospital_Address: Joi.string().required(),
+            Country: Joi.string().required(),
+            State: Joi.string().required(),
+        })
+        let result = schema.validate(req.body);
+        if (result.error) {
+            return res.status(400).json({
+                statusCode: 400,
+                statusValue: "FAIL",
+                message: result.error.details[0].message,
+            })
+        }
+        const checkHospital = await registeredHospitalModel.findOne({ Hospital_Name: req.body.Hospital_Name });
+        if (checkHospital) {
+            return res.status(400).json({
+                statusCode: 400,
+                statusValue: "FAIL",
+                message: "Hospital already registered."
+            })
+        }
+        const updateDoc = await registeredHospitalModel.findByIdAndUpdate(
+            { _id:req.body.id },
+            { 
+                Hospital_Name:req.body.Hospital_Name,
+                Hospital_Address:req.body.Hospital_Address,
+                Country:req.body.Country,
+                State:req.body.State,
+            },
+            { new: true }
+        );
+        if (!updateDoc) {
+            return res.status(404).json({
+                statusCode: 400,
+                statusValue: "FAIL",
+                message: "Hospital not saved."
+            });
+        }
+        return res.status(200).json({
+            statusCode: 200,
+            statusValue: "SUCCESS",
+            message: "Hospital has been updated successfully.",
+            data: updateDoc,
+        });
+    } catch (err) {
+        return res.status(500).json({
+            statusCode: 500,
+            statusValue: "FAIL",
+            message: "Internal server error",
+            data: {
+                generatedTime: new Date(),
+                errMsg: err.stack,
+            }
+        })
+    }
+}
+
+const deleteHospital = async (req, res) => {
+    try {
+        const id = req.params.id;
+        const checkHospital = await registeredHospitalModel.findOne({ _id: req.params.id });
+        if (!checkHospital) {
+            return res.status(400).json({
+                statusCode: 400,
+                statusValue: "FAIL",
+                message: "Incorrect hospital id!!",
+            })
+        }
+        const removeDoc = await registeredHospitalModel.findByIdAndDelete(
+            { _id:req.params.id },
+            { new: true }
+        );
+        if (!removeDoc) {
+            return res.status(400).json({
+                statusCode: 400,
+                statusValue: "FAIL",
+                message: "Data not deleted!",
+            });
+        }
+        return res.status(200).json({
+            statusCode: 200,
+            msg: "Hospital deleted successfully.",
+            data: removeDoc,
+        });
+    } catch (err) {
+        return res.status(500).json({
+            statusCode: 500,
+            statusValue: "FAIL",
+            message: "Internal server error",
+            data: {
+                generatedTime: new Date(),
+                errMsg: err.stack,
+            }
+        })
+    }
+}
+
 /**
  * 
  * @param {*} req 
@@ -111,6 +212,44 @@ const getHospitalList = async (req, res) => {
         })
     }
 }
+
+const getSingleHospital = async (req, res) => {
+    try {
+        const data = await registeredHospitalModel.findById(
+            {
+                _id:mongoose.Types.ObjectId(req.params.id)
+            }, 
+            { 
+                __v: 0, createdAt: 0, updatedAt: 0 
+            }
+        );
+        if (!!data) {
+            return res.status(200).json({
+                statusCode: 200,
+                statusValue: "SUCCESS",
+                message: "Hospital data get successfully.",
+                data: data
+            })
+        }
+        return res.status(400).json({
+            statusCode: 400,
+            statusValue: "FAIL",
+            message: "Data not found.",
+            data: {}
+        })
+    } catch (error) {
+        return res.status(500).json({
+            statusCode: 500,
+            statusValue: "FAIL",
+            message: "Internal server error",
+            data: {
+                generatedTime: new Date(),
+                errMsg: err.stack,
+            }
+        })
+    }
+}
+
 
 const getCountryList = async (req, res) => {
     try {
@@ -185,5 +324,8 @@ module.exports = {
     saveHospital,
     getHospitalList,
     getCountryList,
-    getStateListByCountryName
+    getStateListByCountryName,
+    getSingleHospital,
+    updateHospital,
+    deleteHospital,
 }

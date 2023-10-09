@@ -14,6 +14,7 @@ const path = require('path');
 const deviceIdModel = require('../model/device_ventilator_collection');
 const statusModel = require('../model/statusModel');
 const logModel = require('../model/logModel');
+const RegisterDevice = require('../model/RegisterDevice');
 const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_ACCESS_KEY,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
@@ -744,67 +745,104 @@ const getAllDeviceId1 = async (req, res) => {
 
 const getAllDeviceId = async (req, res) => {
   try {
-    
-    // Search
-    var search = "";
-    if (req.query.search && req.query.search !== "undefined") {
-      search = req.query.search;
+     // Search
+     var search = "";
+     if (req.query.search && req.query.search !== "undefined") {
+       search = req.query.search;
     }
-
-    // Pagination
+     // Pagination
     let { page, limit } = req.query;
     if (!page || page === "undefined") {
-      page = 1;
+       page = 1;
     }
     if (!limit || limit === "undefined" || parseInt(limit) === 0) {
-      limit = 99999;
+       limit = 99999;
     }
-    
-    var activeDevices = await statusModel.find({ message:"ACTIVE" }, { __v:0 }).sort({updatedAt:-1});
-    var inactiveDevices = await statusModel.find({ message:"INACTIVE" }, { __v:0 }).sort({updatedAt:-1});
-    var finalArr = [...activeDevices,...inactiveDevices]
-    
-    // For search
-    var key = "deviceId";
-    if (req.query.search && req.query.search !== "undefined") {
-      finalArr = await statusModel.find({deviceId: { $regex: ".*" + search + ".*", $options: "i" }},{__v:0}).sort({updatedAt:-1});
-    }
+    const activeDevices = await statusModel.aggregate( [
+      {
+        $match: {
+          "message":"ACTIVE",
+        }
+      },
+      {
+        $lookup:
+          {
+            from: "registerdevices",
+            localField: "deviceId",
+            foreignField: "DeviceId",
+            as: "deviceInfo"
+          }
+      },
+      {
+        $match: {deviceId: { $regex: ".*" + search + ".*", $options: "i" }}
+      },
+      {
+        $project:{
+          "createdAt":0, "__v":0, "deviceInfo.__v":0,"deviceInfo.createdAt":0,
+          "deviceInfo.updatedAt":0, "deviceInfo.Status":0,
+        }
+      },
+      {
+        $sort: { updatedAt:-1 },
+      },
+    ]);
+   const inactiveDevices = await statusModel.aggregate( [
+    {
+      $match: {
+        "message":"INACTIVE",
+      }
+    },
+    {
+      $lookup:
+        {
+          from: "registerdevices",
+          localField: "deviceId",
+          foreignField: "DeviceId",
+          as: "deviceInfo"
+        }
+    },
+    {
+      $match: {deviceId: { $regex: ".*" + search + ".*", $options: "i" }}
+    },
+    {
+      $project:{
+        "createdAt":0, "__v":0, "deviceInfo.__v":0,"deviceInfo.createdAt":0,
+        "deviceInfo.updatedAt":0,"deviceInfo.Status":0,
+      }
+    },
+    {
+      $sort: { updatedAt:-1 },
+    },
+  ]);
+  var finalArr = [...activeDevices, ...inactiveDevices];
+  // remove duplicate records
+  var key = "deviceId";
+  var arrayUniqueByKey = [...new Map(finalArr.map(item => [item[key], item])).values()];
 
-    // Remove duplicate devices
-    var arrayUniqueByKey = [...new Map(finalArr.map(item => [item[key], item])).values()];
-    
-  //   arrayUniqueByKey.map(async function (ob) {
-  //     let singleData = await Device.findOne({DeviceId:ob.deviceId})
-  //         console.log(12345, ob.devicId = singleData.DeviceId)
-          
-  // });
-    // For pagination
-    // console.log(222,arrayUniqueByKey)
-     
-    const paginateArray =  (arrayUniqueByKey, page, limit) => {
-      const skip = arrayUniqueByKey.slice((page - 1) * limit, page * limit);
-      return skip;
-    };
-    
-  
-    var allDevices = paginateArray(arrayUniqueByKey, page, limit)
-    if (arrayUniqueByKey.length > 0) {
-      return res.status(200).json({
-        status: 200,
-        statusValue: "SUCCESS",
-        message: "Event lists has been retrieved successfully.",
-        data: { data: allDevices, },
-        totalDataCount: arrayUniqueByKey.length,
-        totalPages: Math.ceil( (arrayUniqueByKey.length)/ limit),
-        currentPage: page
-      })
-    }
-    return res.status(400).json({
-      status: 400,
-      statusValue: "FAIL",
-      message: 'Data not found.',
-      data: {}
-    });
+  // For pagination
+  const paginateArray =  (arrayUniqueByKey, page, limit) => {
+  const skip = arrayUniqueByKey.slice((page - 1) * limit, page * limit);
+  return skip;
+  };
+
+  var allDevices = paginateArray(arrayUniqueByKey, page, limit)
+  if (arrayUniqueByKey.length > 0) {
+    return res.status(200).json({
+      status: 200,
+      statusValue: "SUCCESS",
+      message: "Event lists has been retrieved successfully.",
+      data: { data: allDevices, },
+      totalDataCount: arrayUniqueByKey.length,
+      totalPages: Math.ceil( (arrayUniqueByKey.length)/ limit),
+      currentPage: page
+    })
+  }
+  return res.status(400).json({
+    status: 400,
+    statusValue: "FAIL",
+    message: 'Data not found.',
+    data: {}
+  });
   } catch (err) {
     return res.status(500).json({
       status: -1,
