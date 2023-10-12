@@ -118,6 +118,51 @@ const updateDevice = async (req, res) => {
   }
 };
 
+
+/**
+ * api      UPDATE @/devices/update/DeviceId
+ * desc     @update devices for logger access only
+ */
+const deleteSingleDevice = async (req, res) => {
+  try {
+    const DeviceId = req.params.DeviceId;
+
+    const checkDevice = await Device.findOne({DeviceId:DeviceId});
+    if (!checkDevice || checkDevice == "") {
+      return res.status(400).json({
+        "statusCode": 400,
+        "statusValue": "FAIL",
+        "message":"data not found."
+      });
+    }
+    const deleteDevice = await Device.findOneAndDelete({DeviceId:DeviceId});
+    // await statusModel.findByIdAndDelete({deviceId:DeviceId})
+    if (!!deleteDevice) {
+      return res.status(200).json({
+        statusCode: 200,
+        statusValue: "SUCCESS",
+        message: "Device deleted successfully.",
+      });
+    }
+    return res.status(400).json({
+      "statusCode": 400,
+      "statusValue": "FAIL",
+      "message":"data not deleted."
+    });
+  } catch (err) {
+    return res.status(500).json({
+      statusCode: 500,
+      statusValue: "FAIL",
+      message: "Internal server error",
+      data: {
+        generatedTime: new Date(),
+        errMsg: err.stack,
+      }
+    });
+  }
+};
+
+
 /**
  * api      GET @/devices/getdevice/DeviceId
  * desc     @get single device by id for logger access only
@@ -143,7 +188,7 @@ const getDeviceById = async (req, res) => {
       'Doctor_Name':data.Doctor_Name,
       'Hospital_Name':data.Hospital_Name,
       'IMEI_NO':data.IMEI_NO,
-      'Status':data.Status,
+      'message':data2.message,
       'Ward_No':data.Ward_No,
       'isAssigned':data.isAssigned, 
       'address':data2.address, 
@@ -1341,6 +1386,7 @@ module.exports = {
   createDevice,
   updateDevice,
   getDeviceById,
+  deleteSingleDevice,
   getAllDevices,
   addDeviceService,
   getServicesById,

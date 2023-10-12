@@ -19,6 +19,7 @@ const {
     getServiceEngList,
     changeUserType,
     getActivity,
+    deleteSingleUser,
 } = require('../controller/users.js')
 
 const {
@@ -54,6 +55,8 @@ router.get('/users-list', isAuth, isAdmin, getAllUsers);
 router.get('/service-eng-list', getServiceEngList);
 
 router.put('/change-userType/:userId', isAuth, isAdmin, changeUserType);
+router.delete('/users/delete-byid/:id', isAuth, isAdmin, deleteSingleUser);
+
 router.put('/users/update', isAuth, updateUserProfile);
 router.put("/users/changepassword", isAuth, userPasswordChange);
 router.get("/user-activity", isAuth, getActivity);

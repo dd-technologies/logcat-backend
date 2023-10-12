@@ -835,6 +835,11 @@ const changeUserType = async (req, res) => {
   }
 }
 
+/**
+ * @desc - get single user details
+ * @api - GET /api/logger/users/userId
+ * @returns json data
+ */
 const getUserByUserId = async (req, res) => {
   try {
     const user = await Users.findById(req.user).select('-passwordHash');
@@ -874,6 +879,51 @@ const getUserByUserId = async (req, res) => {
   }
 };
 
+/**
+ * @desc - delete user by admin or superadmin
+ * @api - DELETE /api/logger/users/delete-byid/:id
+ * @returns json data
+ */
+const deleteSingleUser = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const checkUser = await Users.findById({ _id: mongoose.Types.ObjectId(id) })
+    if (!checkUser) {
+      return res.status(400).json({
+        statusCode: 400,
+        statusValue: "FAIL",
+        message: "User not found with this userId"
+      })
+    }
+    const deleteDoc = await Users.findByIdAndDelete({ _id: mongoose.Types.ObjectId(id) }, { new: true });
+    if (!deleteDoc) {
+      return res.status(400).json({
+        statusCode: 400,
+        statusValue: "FAIL",
+        message: "data not update."
+      })
+    }
+    return res.status(200).json({
+      statusCode: 200,
+      statusValue: "SUCCESS",
+      message: "User deleted successfully.",
+      data: deleteDoc
+    })
+  } catch (err) {
+    return res.status(500).json({
+      statusCode: 500,
+      statusValue: "FAIL",
+      message: "Internal server error",
+      data: {
+        generatedTime: new Date(),
+        errMsg: err.stack,
+      }
+    })
+  }
+}
+
+
+
 module.exports = {
   registerUser,
   loginUser,
@@ -885,6 +935,7 @@ module.exports = {
   getUserByUserId,
   getUserProfileById,
   getAllUsers,
+  deleteSingleUser,
   getServiceEngList,
   changeUserType,
   verifyOtp,

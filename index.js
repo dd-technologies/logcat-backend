@@ -9,7 +9,7 @@ const session = require("express-session");
 const bodyParser = require("body-parser");
 const nodemailer = require("nodemailer");
 const http = require("http");
-
+var cookieParser = require('cookie-parser');
 
 
 // sendin blue
@@ -33,6 +33,8 @@ const hospitalRouter = require("./route/hospitalRoute");
 const projectRouter = require("./route/projectRouter.js");
 const productionRouter = require("./route/productionRoute.js");
 const supportRouter = require("./route/supportRoute.js");
+var indexRouter = require('./route/index');
+
 
 // creating connection with DB
 connectDB();
@@ -40,9 +42,9 @@ connectDB();
 const app = express();
 const server = http.createServer(app);
 app.use(express.json());
-
+app.use(cookieParser());
 app.enable("trust proxy");
-
+app.use(express.static(path.join(__dirname, 'public')));
 // DEVELOPMENT environment morgan logs
 // if (process.env.NODE_ENV === "DEVELOPMENT") {
 app.use(morgan("tiny"));
@@ -79,6 +81,7 @@ app.use("/hospital", hospitalRouter);
 app.use("/projects", projectRouter);
 app.use("/production", productionRouter);
 app.use("/support/", supportRouter);
+app.use('/api/s3', indexRouter);
 
 // Logs Routing
 app.use("/api/logger/logs", logs);
