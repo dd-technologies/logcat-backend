@@ -18,7 +18,7 @@ const saveTicket = async (req, res) => {
     try {
         const schema = Joi.object({
             deviceId: Joi.string().required(),
-            // hospital_name: Joi.string().required(),
+            hospital_name: Joi.string().optional(),
             concerned_p_contact: Joi.string().required(),
             service_engineer: Joi.string().required(),
             issues: Joi.string().required(),
@@ -48,7 +48,7 @@ const saveTicket = async (req, res) => {
             // ticket_owner:"admin@gmail.com",
             status:"Pending",
             priority:req.body.priority,
-            // hospital_name:req.body.hospital_name,
+            hospital_name:req.body.hospital_name,
             concerned_p_contact:req.body.concerned_p_contact,
             service_engineer:req.body.service_engineer,
             issues:req.body.issues,
@@ -159,7 +159,8 @@ const getAllTickets = async (req, res) => {
             }
         })
     }
-}
+}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
+
 
 const deleteTicket = async (req, res) => {
     try {

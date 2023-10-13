@@ -358,7 +358,7 @@ const resetForgetPassword = async (req, res) => {
     );
     await sendOtp(checkUser.email, otp)
     res.status(200).json({
-      statusCode: 200,
+      statusCode: 200,                   
       statusValue: "SUCCESS",
       message: "Otp send successfully.",
       otp
@@ -672,6 +672,18 @@ const getActivity = async (req, res) => {
  */
 const getAllUsers = async (req, res) => {
   try {
+    // for checking user roles
+    // const token = req.headers["authorization"].split(' ')[1];
+    // const verified = await jwtr.verify(token, process.env.JWT_SECRET);
+    // // console.log(123, verified.user)
+    // const checkUserRoles = await User.findById({_id:verified.user})
+    // if (checkUserRoles.userType === "User") {
+    //   return res.status(400).json({
+    //     statusCode:400,
+    //     statusValue:"FAIL",
+    //     message:"you don't have permission for this action.",
+    //   })
+    // }
     // Pagination
     let { page, limit } = req.query;
     if (!page || page === "undefined") {

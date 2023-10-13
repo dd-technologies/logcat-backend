@@ -21,7 +21,7 @@ const isAuth = async (req, res, next) => {
         },
       });
     }
-    
+    // console.log(111, req.headers["authorization"])
     const token = req.headers["authorization"].split(' ')[1];
     // console.log("token:", token)
     if (!token) {
@@ -39,7 +39,7 @@ const isAuth = async (req, res, next) => {
     }
 
     const verified = await jwtr.verify(token, process.env.JWT_SECRET);
-    
+    // console.log(verified)
     if (!verified) {
       return res.status(401).json({
         status: 0,
@@ -52,7 +52,8 @@ const isAuth = async (req, res, next) => {
           },
         },
       });
-  }         
+    }
+
     req.user = verified.user;
     console.log("req user", req.user);
     req.jti = verified.jti;
@@ -60,7 +61,7 @@ const isAuth = async (req, res, next) => {
     // proceed after authentication
     next();
   } catch (err) {
-    console.log("err",err)
+    // console.log("err",err)
     res.status(500).json({
       status: -1,
       data: {
@@ -117,7 +118,7 @@ const isAdmin = async (req, res, next) => {
     const user = await User.findById(req.user);
     // console.log("Details of user", user);
       //  console.log("Admin details :", user);
-    if (user.userType === "User" || user.userType === "Dispatch") {
+    if (user.userType !== "Admin") {
       return res.status(403).json({
         status: 0,
         data: {
@@ -148,4 +149,43 @@ const isAdmin = async (req, res, next) => {
   // console.log("request created",req.user)
 };
 
-module.exports = { isAuth, isSuperAdmin, isAdmin };
+const isDispatch = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user);
+    // console.log("Details of user", user);
+      //  console.log("Admin details :", user);
+    if (user.userType !== "Dispatch") {
+      // console.log(user)
+      return res.status(403).json({
+        status: 0,
+        data: {
+          err: {
+            generatedTime: new Date(),
+            errMsg: "You dont have permission to access this.",
+            msg: "You dont have permission to access this.",
+            type: "AuthenticationError",
+          },
+        },
+      });
+    }
+    next();
+  } catch (err) {
+    res.status(500).json({
+      status: -1,
+      data: {
+        err: {
+          generatedTime: new Date(),
+          errMsg: err.message,
+          msg: "Internal Server Error",
+          type: err.name,
+        },
+      },
+    });
+  }
+
+  // console.log("request created",req.user)
+};
+
+
+
+module.exports = { isAuth, isSuperAdmin, isAdmin, isDispatch };

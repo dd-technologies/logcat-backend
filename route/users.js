@@ -51,7 +51,7 @@ router.get('/auth/logout', isAuth, logoutUser)
 // Protected Route
 // router.get('/users', isAuth, profileCache(10), getUserByUserId)
 router.get('/users/:userId', isAuth, getUserProfileById);
-router.get('/users-list', isAuth, isAdmin, getAllUsers);
+router.get('/users-list', isAuth, getAllUsers);
 router.get('/service-eng-list', getServiceEngList);
 
 router.put('/change-userType/:userId', isAuth, isAdmin, changeUserType);

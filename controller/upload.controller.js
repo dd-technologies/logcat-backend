@@ -12,9 +12,9 @@ const s33 = new AWS.S3();
 exports.uploadSingle = (req, res) => {
     // req.file contains a file object
         res.json(req.file);
-        // console.log(req.file, req.body)
+        // console.log(req.file, req.params.deviceId)
         const newObj = {
-            "deviceId":req.body.deviceId,
+            "deviceId":req.params.deviceId,
             ...req.file,
         }
         const saveDoc = new s3BucketModel(newObj);
