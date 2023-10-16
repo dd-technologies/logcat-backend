@@ -11,17 +11,18 @@ const s33 = new AWS.S3();
 
 exports.uploadSingle = async (req, res) => {
     // req.file contains a file object
-        res.json(req.file);
-        // console.log(req.file, req.params.deviceId)
+    res.json(req.file);
+    console.log(req.file.fieldname, req.params.deviceId)
         
-        const newObj = {
-            "deviceId":req.params.deviceId,
-            ...req.file,
-        }
-        const saveDoc = new s3BucketModel(newObj);
-        saveFile = saveDoc.save();
-        await s3BucketModel.deleteMany({location: ""});
+    const newObj = {
+        "deviceId":req.params.deviceId,
+        ...req.file,
+    }
+    const saveDoc = new s3BucketModel(newObj);
+    saveFile = saveDoc.save();
+    await s3BucketModel.deleteMany({location: ""});
 }
+
 
 exports.getUploadedS3file = async (req, res) => {
     try {

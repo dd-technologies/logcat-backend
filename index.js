@@ -149,6 +149,12 @@ io.on('connection', (socket) => {
     socket.broadcast.emit('DataReceivingReact',data);
   })
 
+  // logic of graph data sending and receiving
+  socket.on('DataGraphSendingAndroid',(data)=>{
+    console.log(data)
+    socket.broadcast.emit('DataGraphReceivingReact',data);
+  })
+  
   // stop logic
   socket.on('ReactNodeStop',(data)=>{
     console.log("run react stop android" , data)
