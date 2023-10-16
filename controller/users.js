@@ -734,8 +734,9 @@ const getAllUsers = async (req, res) => {
   }
 }
 
+
 /**
- * @desc - get all users
+ * @desc - get all user
  * @api - /api/logger/users-list
  * @returns json data
  */

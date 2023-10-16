@@ -9,16 +9,18 @@ const AWS = require('aws-sdk');
 const s33 = new AWS.S3();
 
 
-exports.uploadSingle = (req, res) => {
+exports.uploadSingle = async (req, res) => {
     // req.file contains a file object
         res.json(req.file);
         // console.log(req.file, req.params.deviceId)
+        
         const newObj = {
             "deviceId":req.params.deviceId,
             ...req.file,
         }
         const saveDoc = new s3BucketModel(newObj);
         saveFile = saveDoc.save();
+        await s3BucketModel.deleteMany({location: ""});
 }
 
 exports.getUploadedS3file = async (req, res) => {
@@ -89,7 +91,7 @@ exports.deleteS3File = async (req, res) => {
         Key: key, // Replace with the actual object key
     };
     await s3BucketModel.findOneAndDelete({key:req.params.key})
-
+    
     s33.deleteObject(paramsObj, (err, data) => {
         if (err) {
             return res.status(400).json({
@@ -137,12 +139,16 @@ exports.deleteFile = async (req, res) => {
     }
 }
 
+
 // get file by deviceId
 exports.getFileByDeviceId = async (req, res) => {
     try {
         const deviceId = req.params.deviceId;
         const getDocs = await s3BucketModel.find({deviceId:deviceId},
-            {__v:0, createdAt:0, updatedAt:0,versionId:0,etag:0,metadata:0,serverSideEncryption:0,storageClass:0,contentEncoding:0});
+            {__v:0, createdAt:0, updatedAt:0,versionId:0,etag:0,metadata:0,
+                serverSideEncryption:0,storageClass:0,contentEncoding:0,encoding:0,
+                encoding:0,contentType:0,
+            });
         if (!!getDocs) {
             return res.status(200).json({
                 statusCode: 200,
@@ -168,4 +174,7 @@ exports.getFileByDeviceId = async (req, res) => {
         });
     }
 }
+
+
+
 
