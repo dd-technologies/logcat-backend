@@ -1,0 +1,19 @@
+// deviceRouter.js
+const express = require('express');
+const router = express.Router();
+const { isAuth } = require("../middleware/authMiddleware.js");
+const upload = require('../helper/upload.helper');
+const productionController = require("../controller/productionController.js");
+const uploadController = require('../controller/upload.controller');
+
+// Production routes
+
+router.post('/add-new', isAuth, productionController.createProduction);
+router.get('/production-list', isAuth, productionController.getProductionData);
+router.get('/get-byid/:id', isAuth, productionController.getProductionById);
+router.put('/update-production', isAuth, productionController.updateProduction);
+router.delete('/delete-byid/:id', isAuth, productionController.deleteProductionById);
+router.post('/upload-production-file/:deviceId/:flag', upload.single('file'), uploadController.uploadQualityReport);
+
+
+module.exports = router;
