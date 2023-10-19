@@ -111,7 +111,8 @@ const { Server } = require("socket.io");
 
 const io = new Server(server, {
   cors: {
-    origin: "http://192.168.2.37:3000",
+    // origin: "http://192.168.2.37:3000",
+    origin: "http://3.26.129.121:3000",
     methods: ["GET", "POST"],
   },
 });
@@ -131,7 +132,7 @@ io.on('connection', (socket) => {
     }
   })
 
-  // start react logic
+  // start react logic`
   socket.on('ReactStartUp',(deviceIdReact)=>{
     console.log("run react startup")
      if(deviceIdArr.includes(deviceIdReact)){
@@ -154,7 +155,7 @@ io.on('connection', (socket) => {
     console.log(data)
     socket.broadcast.emit('DataGraphReceivingReact',data);
   })
-  
+
   // stop logic
   socket.on('ReactNodeStop',(data)=>{
     console.log("run react stop android" , data)

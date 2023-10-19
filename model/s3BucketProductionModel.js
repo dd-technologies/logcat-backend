@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 const Schema = mongoose.Schema;
 
-const s3BucketSchema = mongoose.Schema({
+const s3BucketProdSchema = mongoose.Schema({
     userId: {
         type: Schema.Types.ObjectId,
         ref: "User" 
@@ -10,7 +10,7 @@ const s3BucketSchema = mongoose.Schema({
         type: String,
         default:""
     },
-    serialNo: {
+    flag: {
         type: String,
         default: ""
     },
@@ -86,5 +86,5 @@ const s3BucketSchema = mongoose.Schema({
 },
     { timestamps: true })
 
-const s3BucketModel = mongoose.model('s3_bucket_file', s3BucketSchema)
-module.exports = s3BucketModel;
+const s3BucketProdModel = mongoose.model('s3_bucket_production', s3BucketProdSchema)
+module.exports = s3BucketProdModel;

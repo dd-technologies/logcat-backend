@@ -12,6 +12,7 @@ const productionSchema = new mongoose.Schema({
     iopr: { type: String, required: true, default: "" },
     manufacturingDate: {type: String, required: true, default: ""},
     dispatchDate: {type: String, required: true, default: ""},
+    
 },
     { timestamps: true }
 );

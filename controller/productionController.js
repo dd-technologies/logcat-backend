@@ -128,10 +128,11 @@ const getProductionData = async (req, res) => {
 */
 const getProductionById = async (req, res) => {
     try {
-        const { id } = req.params;
-        const data = await productionModel.findById({_id:req.params.id}).select({ __v: 0, createdAt: 0, updatedAt: 0 })
-        
-        if (!data) {
+        const data = await productionModel.find({deviceId:req.params.deviceId})
+        .sort({updatedAt:-1})
+        .limit(1)
+        .select({ __v: 0, createdAt: 0, updatedAt: 0 })
+        if (data.length == 0) {
             return res.status(404).json({
                 statusCode: 404,
                 statusValue: "FAIL",
@@ -143,7 +144,7 @@ const getProductionById = async (req, res) => {
             statusCode: 200,
             statusValue: "SUCCESS",
             message: "production data get successfully!",
-            data: data,
+            data: data[0],
         });
     } catch (err) {
         res.status(500).json({

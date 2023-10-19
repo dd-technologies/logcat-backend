@@ -304,7 +304,7 @@ const addDeviceService = async (req, res) => {
       deviceId: Joi.string().required(),
       message: Joi.string().required(),
       date: Joi.string().required(),
-      serialNo: Joi.string().required(),
+      serialNo: Joi.string().allow("").optional(),
     })
     let result = schema.validate(req.body);
     if (result.error) {
@@ -315,7 +315,13 @@ const addDeviceService = async (req, res) => {
       })
     }
     const project_code = req.query.project_code
-    const newServices = new servicesModel(req.body);
+    var otp = Math.floor(1000 + Math.random() * 9000);
+    const newServices = new servicesModel({
+      deviceId:req.body.deviceId,
+      message:req.body.message,
+      date:req.body.date,
+      serialNo:otp,
+    });
     const savedServices = await newServices.save();
     if (savedServices) {
       return res.status(201).json({
@@ -328,7 +334,7 @@ const addDeviceService = async (req, res) => {
       statusCode: 400,
       statusValue: "FAIL",
       message: "Error! Data not added.",
-      data: console.log(savedServices)
+      data:savedServices
     })
   } catch (err) {
     res.status(500).json({
@@ -357,7 +363,6 @@ const getServicesById = async (req, res) => {
     if (!limit || limit === "undefined" || parseInt(limit) === 0) {
       limit = 999999;
     }
-    const skip = page > 0 ? (page - 1) * limit : 0;
 
     // const project_code = req.query.project_code;
     if (!deviceId) {
@@ -367,20 +372,65 @@ const getServicesById = async (req, res) => {
         message: "Device Id is required!"
       })
     }
-    const data = await servicesModel.find({ deviceId: deviceId }, { "createdAt": 0, "updatedAt": 0, "__v": 0 })
-    .skip(skip)
-    .limit(limit);
 
+    // aggregate logic
+    var pipline = [
+      // Match
+      {
+        "$match": {"deviceId": deviceId},
+      },
+      {
+        "$lookup": {
+          "from": "s3_bucket_files",
+          "localField": "serialNo",
+          "foreignField": "serialNo",
+          "as": "bucket_mapping",
+        },
+      },
+      // For this data model, will always be 1 record in right-side
+      // of join, so take 1st joined array element
+      {
+        "$set": {
+          "bucket_mapping": {"$first": "$bucket_mapping"},
+        }
+      },
+      // Extract the joined embeded fields into top level fields
+      {
+        "$set": {"location": "$bucket_mapping.location"},
+      },
+      {
+        "$unset": [
+          "bucket_mapping",
+          "__v",
+          "createdAt",
+          "updatedAt",
+        ]
+      },
+      {
+        "$sort": {"date":-1}
+      },
+    ]
+
+    // get data
+    const resData = await servicesModel.aggregate(pipline);
+    
+    // for pagination
+    const paginateArray =  (resData, page, limit) => {
+      const skip = resData.slice((page - 1) * limit, page * limit);
+      return skip;
+    };
+
+    let finalData = paginateArray(resData, page, limit)
     // count data
     const count = await servicesModel.find({ deviceId: deviceId }, { "createdAt": 0, "updatedAt": 0, "__v": 0 })
     .countDocuments();
 
-    if (data.length > 0) {
+    if (finalData.length > 0) {
       return res.status(200).json({
         statusCode: 200,
         statusValue: "SUCCESS",
         message: "Services get successfully!",
-        data: data,
+        data: finalData,
         totalDataCount: count,
         totalPages: Math.ceil(count / limit),
         currentPage: page
@@ -775,14 +825,14 @@ const assignedDeviceToUser = async (req, res) => {
         message: `Device not registered with this deviceId : ${req.body.DeviceId}`
       });
     }
-    const checkIsAssigned = await RegisterDevice.find({DeviceId: { $in: req.body.DeviceId }, isAssigned:true});
-    if (checkIsAssigned.length>0) {
-      return res.status(400).json({
-        statusCode: 400,
-        statusValue: "FAIL",
-        message: "Device already assigned.",
-      })
-    }
+    // const checkIsAssigned = await RegisterDevice.find({DeviceId: { $in: req.body.DeviceId }, isAssigned:true});
+    // if (checkIsAssigned.length>0) {
+    //   return res.status(400).json({
+    //     statusCode: 400,
+    //     statusValue: "FAIL",
+    //     message: "Device already assigned.",
+    //   })
+    // }
     const updateDoc = await assignDeviceTouserModel.findOneAndUpdate({
       userId: mongoose.Types.ObjectId(req.body._id),
     }, {
@@ -841,6 +891,8 @@ const getAssignedDeviceById = async (req, res) => {
     let data = await assignDeviceTouserModel.find({userId:mongoose.Types.ObjectId(userId)})
     .select({_id:0, __v:0, createdAt:0, updatedAt:0})
     .sort({ createdAt: -1 });
+    
+    
     // var tempArr = data[0].Assigned_Devices;
     // tempArr.map(async (item) => {
         

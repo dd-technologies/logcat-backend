@@ -22,6 +22,15 @@ const s3 = new AWS.S3({
   region: 'ap-south-1',
 });
 
+let redisClient = require("../config/redisInit");
+const User = require('../model/users');
+const assignDeviceTouserModel = require('../model/assignedDeviceTouserModel');
+const JWTR = require("jwt-redis").default;
+const jwtr = new JWTR(redisClient);
+
+
+
+
 const createLogsV2 = async (req, res) => {
   try {
     const { project_code } = req.params;
@@ -817,13 +826,64 @@ const getAllDeviceId = async (req, res) => {
   var finalArr = [...activeDevices, ...inactiveDevices];
   // remove duplicate records
   var key = "deviceId";
-  var arrayUniqueByKey = [...new Map(finalArr.map(item => [item[key], item])).values()];
+  let arrayUniqueByKey = [...new Map(finalArr.map(item => [item[key], item])).values()];
 
+  let resArr1 = [];
+  let resArr2 = [];
+  // filter data on the basis of userType
+  const token = req.headers["authorization"].split(' ')[1];
+  const verified = await jwtr.verify(token, process.env.JWT_SECRET);
+  const loggedInUser = await User.findById({_id:verified.user});
+  
+  // get data by user role
+  if (loggedInUser.userType == "User") {
+
+    const assignDevices = await assignDeviceTouserModel.findOne({userId:loggedInUser._id});
+    const deviceIds = assignDevices.Assigned_Devices;
+    const tempIds = deviceIds.map((item) => item.DeviceId)
+    
+    for (let i = 0; i<tempIds.length; i++) {
+      arrayUniqueByKey.map((item) => {
+        if (item.deviceId == tempIds[i] && item.message === "ACTIVE") {
+          resArr1.push(item)
+        } else if (item.deviceId == tempIds[i] && item.message === "INACTIVE") {
+          resArr2.push(item)
+        } else {
+          return false;
+        }
+      });
+    }
+    
+    let resultArr = [...resArr1, ...resArr2];
+    const paginateArray =  (resultArr, page, limit) => {
+      const skip = resultArr.slice((page - 1) * limit, page * limit);
+      return skip;
+    };  
+    
+    var allDevices = paginateArray(resultArr, page, limit)
+      if (resultArr.length > 0) {
+        return res.status(200).json({
+          status: 200,
+          statusValue: "SUCCESS",
+          message: "Event lists has been retrieved successfully.",
+          data: { data: allDevices, },
+          totalDataCount: resultArr.length,
+          totalPages: Math.ceil( (resultArr.length)/ limit),
+          currentPage: page,
+          // tempData: allDevices,
+        })
+      }
+    // const lData = await paginateArray.find({deviceId:{in:tempIds}})
+    // console.log(lData,lData)
+  }
+  // console.log(333, resultArr)
   // For pagination
   const paginateArray =  (arrayUniqueByKey, page, limit) => {
   const skip = arrayUniqueByKey.slice((page - 1) * limit, page * limit);
   return skip;
   };
+
+    
 
   var allDevices = paginateArray(arrayUniqueByKey, page, limit)
   if (arrayUniqueByKey.length > 0) {
@@ -834,7 +894,8 @@ const getAllDeviceId = async (req, res) => {
       data: { data: allDevices, },
       totalDataCount: arrayUniqueByKey.length,
       totalPages: Math.ceil( (arrayUniqueByKey.length)/ limit),
-      currentPage: page
+      currentPage: page,
+      // tempData: allDevices,
     })
   }
   return res.status(400).json({
