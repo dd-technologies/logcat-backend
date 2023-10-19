@@ -161,7 +161,7 @@ exports.deleteProductionFile = async (req, res) => {
 exports.getProductionFile = async (req, res) => {
     try {
         
-        const getDoc = await s3BucketProdModel.find({$and:[{deviceId:req.params.deviceId},{flag:req.params.flag}]},
+        const getDoc = await s3BucketProdModel.findOne({$and:[{deviceId:req.params.deviceId},{flag:req.params.flag}]},
             {__v:0, createdAt:0, updatedAt:0,versionId:0,etag:0,metadata:0,serverSideEncryption:0,storageClass:0,contentEncoding:0}
         );
 
