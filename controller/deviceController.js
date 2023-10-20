@@ -575,16 +575,16 @@ const addAboutDevice = async (req, res) => {
       serial_no: Joi.string().required(),
       purpose: Joi.string().required(),
       concerned_person: Joi.string().required(),
-      batch_no: Joi.string().required(),
-      date_of_manufacturing: Joi.string().required(),
+      batch_no: Joi.string(),                   // not required
+      date_of_manufacturing: Joi.string(),      // not required
       address: Joi.string().required(),
       date_of_dispatch: Joi.string().required(),
       hospital_name: Joi.string().required(),
       phone_number: Joi.string().required(),
-      sim_no: Joi.string().required(),
+      sim_no: Joi.string(),                     // not required
       pincode: Joi.string().required(),
-      distributor_name: Joi.string().allow(''),
-      distributor_contact: Joi.string().allow(''),
+      distributor_name: Joi.string().allow(''), // not required
+      distributor_contact: Joi.string().allow(''),     // not required
     });
     const result = schema.validate(req.body);
     if (result.error) {

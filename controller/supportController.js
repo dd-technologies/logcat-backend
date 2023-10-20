@@ -8,6 +8,7 @@ const assignTicketModel = require('../model/assignTicketModel');
 let redisClient = require("../config/redisInit");
 const activityModel = require('../model/activityModel');
 const User = require('../model/users');
+const installationModel = require('../model/deviceInstallationModel');
 
 const JWTR = require("jwt-redis").default;
 const jwtr = new JWTR(redisClient);
@@ -283,6 +284,36 @@ const getTicketDetails = async (req, res) => {
     }
 }
 
+const addInstallationRecord = async (req, res) => {
+    try {
+        const token = req.headers["authorization"].split(' ')[1];
+        const verified = await jwtr.verify(token, process.env.JWT_SECRET);
+        const loggedInUser = await User.findById({_id:verified.user});
+
+        const newObj = {
+            "userId":verified.user,
+            "deviceId":req.body.deviceId,
+            "concernedPName":req.body.concernedPName,
+            "dateOfWarranty":req.body.dateOfWarranty,
+            "hospitalName":req.body.hospitalName,
+            "address":req.body.address,
+        }
+        const saveDoc = new installationModel(newObj);
+        saveFile = saveDoc.save();
+        //   await s3BucketProdModel.deleteMany({location: ""});
+    }
+    catch (err) {
+        return res.status(500).json({
+            statusCode: 500,
+            statusValue: "FAIL",
+            message: "Internal server error",
+            data: {
+                generatedTime: new Date(),
+                errMsg: err.stack,
+            }
+        })
+    }
+}
 
 
 
@@ -292,4 +323,5 @@ module.exports = {
     deleteTicket,
     updateTicket,
     getTicketDetails,
+    addInstallationRecord,
 }

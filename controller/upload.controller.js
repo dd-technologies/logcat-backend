@@ -7,6 +7,7 @@ require("dotenv").config({ path: "../.env" });
 // const s3 = require('../utils/s3.util');
 const AWS = require('aws-sdk');  
 const s3BucketProdModel = require('../model/s3BucketProductionModel');
+const s3BucketInsModel = require('../model/s3BucketInstallationModel');
 const s33 = new AWS.S3();
 
 
@@ -25,6 +26,7 @@ exports.uploadSingle = async (req, res) => {
     await s3BucketModel.deleteMany({location: ""});
 }
 
+// upload quality report for production modules
 exports.uploadQualityReport = async (req, res) => {
   // req.file contains a file object
   res.json(req.file);
@@ -38,6 +40,22 @@ exports.uploadQualityReport = async (req, res) => {
   saveFile = saveDoc.save();
 //   await s3BucketProdModel.deleteMany({location: ""});
 }
+
+// Upload installation report for service module
+exports.uploadInstallationReport = async (req, res) => {
+    // req.file contains a file object
+    res.json(req.file);
+  //   console.log(req.file.fieldname, req.params.deviceId)
+    const newObj = {
+        "deviceId":req.params.deviceId,
+        "flag":req.params.flag,
+        ...req.file,
+    }
+    const saveDoc = new s3BucketInsModel(newObj);
+    saveFile = saveDoc.save();
+  //   await s3BucketProdModel.deleteMany({location: ""});
+}
+  
 
 exports.getUploadedS3file = async (req, res) => {
     try {
@@ -74,7 +92,6 @@ exports.getUploadedS3file = async (req, res) => {
 }
 
 
-
 // Upload multiple files
 exports.uploadMultiple = (req, res) => {
     // req.files contains an array of file object
@@ -107,6 +124,39 @@ exports.deleteS3File = async (req, res) => {
         Key: key, // Replace with the actual object key
     };
     await s3BucketModel.findOneAndDelete({key:req.params.key})
+    
+    s33.deleteObject(paramsObj, (err, data) => {
+        if (err) {
+            return res.status(400).json({
+                statusCode: 400,
+                statusValue:"FAIL",
+                message:`Error in deleting object.`,
+            }) 
+        }
+        return res.status(200).json({
+            statusCode: 200,
+            statusValue:"SUCCESS",
+            message:`Object deleted successfully`,
+            data:data,
+        });     
+    });
+}
+
+// for delete obj from s3 bucket
+exports.deleteInstallationRecord = async (req, res) => {
+    const key = req.params.key;
+    AWS.config.update({
+        // accessKeyId: 'AKIAUFKMQ2DN5UYCHZ2L',
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+        region: process.env.AWS_REGION // Replace with your desired AWS region
+    });
+
+    const paramsObj = {
+        Bucket: process.env.AWS_BUCKET,
+        Key: key, // Replace with the actual object key
+    };
+    await s3BucketInsModel.findOneAndDelete({key:req.params.key})
     
     s33.deleteObject(paramsObj, (err, data) => {
         if (err) {
