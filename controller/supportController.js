@@ -9,23 +9,33 @@ let redisClient = require("../config/redisInit");
 const activityModel = require('../model/activityModel');
 const User = require('../model/users');
 const installationModel = require('../model/deviceInstallationModel');
-
+const aboutDeviceModel = require('../model/aboutDeviceModel');
+const Device = require('../model/RegisterDevice');
+const feedbackModel = require('../model/feedbackModel');
 const JWTR = require("jwt-redis").default;
 const jwtr = new JWTR(redisClient);
 
 
-// Create new ticket
+/**
+* api      POST @/support/create-ticket
+* desc     @saveTicket for logger access only
+*/
 const saveTicket = async (req, res) => {
     try {
         const schema = Joi.object({
             deviceId: Joi.string().required(),
-            hospital_name: Joi.string().optional(),
-            concerned_p_contact: Joi.string().required(),
             service_engineer: Joi.string().required(),
             issues: Joi.string().required(),
-            details: Joi.string().required(),
+            pincode: Joi.string().required(),
+            dept_name: Joi.string().required(),
+            concerned_p_name: Joi.string().required(),
+            concerned_p_email: Joi.string().required(),
+            concerned_p_contact: Joi.string().required(),
             priority: Joi.string().valid('Critical', 'Medium'),
-            address: Joi.string().required(),
+            details: Joi.string().required(),
+            waranty_status: Joi.string().required(),
+            serialNumber: Joi.string().required(),
+            tag: Joi.string().optional(),
         })
         let result = schema.validate(req.body);
         if (result.error) {
@@ -41,6 +51,11 @@ const saveTicket = async (req, res) => {
         const token = req.headers["authorization"].split(' ')[1];
         const verified = await jwtr.verify(token, process.env.JWT_SECRET);
         const loggedInUser = await User.findById({_id:verified.user});
+        
+        // getAddress, Hospital
+        const getHospital = await Device.findOne({DeviceId:req.body.deviceId})
+        // console.log(11,getHospital)
+        const getAddress = await aboutDeviceModel.findOne({deviceId:req.body.deviceId})
 
         const ticketData = new assignTicketModel({
             deviceId:req.body.deviceId,
@@ -48,14 +63,24 @@ const saveTicket = async (req, res) => {
             ticket_owner:loggedInUser.email,
             // ticket_owner:"admin@gmail.com",
             status:"Pending",
-            priority:req.body.priority,
-            hospital_name:req.body.hospital_name,
-            concerned_p_contact:req.body.concerned_p_contact,
+            ticket_status: "Open",
             service_engineer:req.body.service_engineer,
             issues:req.body.issues,
+            pincode:req.body.pincode,
+            dept_name:req.body.dept_name,
+            concerned_p_name:req.body.concerned_p_name,
+            concerned_p_email:req.body.concerned_p_email,
+            concerned_p_contact:req.body.concerned_p_contact,
+            priority:req.body.priority,
             details:req.body.details,
-            address:req.body.address,
+            waranty_status:req.body.waranty_status,
+            serialNumber:req.body.serialNumber,
+            tag:req.body.tag,
+            address:!!getAddress? getAddress.address : "",
+            hospital_name:!!getHospital? getHospital.Hospital_Name : "",
+
         });
+        // console.log(11, ticketData)
         const saveDoc = await ticketData.save();
         if (!saveDoc) {
             return res.status(400).json({
@@ -83,6 +108,10 @@ const saveTicket = async (req, res) => {
 }
 
 
+/**
+* api      GET @/support/tickets
+* desc     @getAllTickets for logger access only
+*/
 const getAllTickets = async (req, res) => {
     try {
         // for search
@@ -163,6 +192,10 @@ const getAllTickets = async (req, res) => {
 }                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
 
 
+/**
+* api      DELETE @/support/delete-ticket/:id
+* desc     @deleteTicket for logger access only
+*/
 const deleteTicket = async (req, res) => {
     try {
         // for loggedIn user
@@ -217,12 +250,18 @@ const deleteTicket = async (req, res) => {
 }
 
 
+/**
+* api      PUT @/support/update-ticket
+* desc     @updateTicket for logger access only
+*/
 const updateTicket = async (req, res) => {
     try {
         const schema = Joi.object({
             id: Joi.string().required(),
             priority: Joi.string().valid("Critical", "Medium").optional(),
             status: Joi.string().valid("Pending", "Not-Done", "Completed").optional(),
+            service_engineer: Joi.string().optional(),
+            ticket_status: Joi.string().valid("Re-Open", "Close").optional(),
         })
         let result = schema.validate(req.body);
         if (result.error) {
@@ -234,13 +273,21 @@ const updateTicket = async (req, res) => {
         }
         // console.log(123, req.body);
         const updateDoc = await assignTicketModel.findByIdAndUpdate({_id:req.body.id}, req.body, { new: true });
+        // console.log(11, updateDoc)
         if (!!updateDoc) {
             return res.status(200).json({
                 statusCode: 200,
-                msg: "Data updated successfully.",
+                statusValue: "SUCCESS",
+                message: "Data updated successfully.",
                 data: updateDoc,
             });
         }
+        return res.status(400).json({
+            statusCode: 400,
+            statusValue: "FAIL",
+            message: "Data updated successfully.",
+            data: updateDoc
+        });
     } catch (err) {
         return res.status(500).json({
             statusCode: 500,
@@ -254,10 +301,15 @@ const updateTicket = async (req, res) => {
     }
 }
 
+
+/**
+* api      GET @/support/get-ticket/:id
+* desc     @getTicketDetails for logger access only
+*/
 const getTicketDetails = async (req, res) => {
     try {
         const id = req.params.id;
-        const data = await assignTicketModel.findById({_id:req.params.id}, { __v: 0, createdAt: 0, updatedAt: 0 });
+        const data = await assignTicketModel.findById({_id:req.params.id}, { __v: 0, updatedAt: 0 });
         if (!data) {
             return res.status(404).json({
                 statusCode: 404,
@@ -284,6 +336,11 @@ const getTicketDetails = async (req, res) => {
     }
 }
 
+
+/**
+* api      POST @/support/add-installation-record
+* desc     @addInstallationRecord for logger access only
+*/
 const addInstallationRecord = async (req, res) => {
     try {
         const token = req.headers["authorization"].split(' ')[1];
@@ -299,7 +356,20 @@ const addInstallationRecord = async (req, res) => {
             "address":req.body.address,
         }
         const saveDoc = new installationModel(newObj);
-        saveFile = saveDoc.save();
+        const saveFile = await saveDoc.save();
+        if (!saveFile) {
+            return res.status(400).json({
+                statusCode: 400,
+                statusValue: "FAIL",
+                message: "Data not added."
+            })
+        }
+        return res.status(200).json({
+            statusCode: 200,
+            statusValue: "SUCCESS",
+            message: "Data added successfully.",
+            data: saveFile
+        })
         //   await s3BucketProdModel.deleteMany({location: ""});
     }
     catch (err) {
@@ -316,6 +386,149 @@ const addInstallationRecord = async (req, res) => {
 }
 
 
+/**
+ * api      GET @/support/get-concerned-person/:concered_person_contact
+ * desc     @getConcernedPerson for logger access only
+ */
+const getConcernedPerson = async (req, res) => {
+    try {
+        const concerned_p_contact = req.params.concerned_p_contact;
+        const getData = await assignTicketModel.findOne({concerned_p_contact:concerned_p_contact})
+        .select({
+            concerned_p_name:1,concerned_p_email:1,concerned_p_contact:1,
+            dept_name:1,hospital_name:1,details:1,
+        })
+        // console.log(getData)
+        if (getData) {
+            return res.status(200).json({
+                statusCode: 200,
+                statusValue: "SUCCESS",
+                message: "Data get successfully.",
+                data: getData
+            })
+        }
+        return res.status(400).json({
+            statusCode: 400,
+            statusValue: "FAIL",
+            message: "Data not found.",
+            data: {}
+        });
+    } catch (err) {
+        return res.status(500).json({
+            statusCode: 500,
+            statusValue: "FAIL",
+            message: "Internal server error",
+            data: {
+                generatedTime: new Date(),
+                errMsg: err.stack,
+            }
+        })
+    }
+}
+
+
+/**
+ * api      GET @/support/get-concerned-person/:concered_person_contact
+ * desc     @getConcernedPerson for logger access only
+ */
+const getIndividualTicket = async (req, res) => {
+    try {
+        const getData = await assignTicketModel.find({concerned_p_email:req.params.email})
+        .select({ticket_number:1,concerned_p_email:1
+        })
+        // console.log(getData)
+        if (getData) {
+            return res.status(200).json({
+                statusCode: 200,
+                statusValue: "SUCCESS",
+                message: "Data get successfully.",
+                data: getData
+            })
+        }
+        return res.status(400).json({
+            statusCode: 400,
+            statusValue: "FAIL",
+            message: "Data not found.",
+            data: []
+        });
+    } catch (err) {
+        return res.status(500).json({
+            statusCode: 500,
+            statusValue: "FAIL",
+            message: "Internal server error",
+            data: {
+                generatedTime: new Date(),
+                errMsg: err.stack,
+            }
+        })
+    }
+}
+
+
+
+/**
+* api      POST @/support/submit-feedback
+* desc     @submitFeedback 
+*/
+const submitFeedback = async (req, res) => {
+    try {
+        const schema = Joi.object({
+            name : Joi.string().required(),
+            email : Joi.string().required(),
+            ratings : Joi.string().required(),
+            message : Joi.string().required(),
+            ticket_number: Joi.string().required(),
+        })
+        let result = schema.validate(req.body);
+        if (result.error) {
+            return res.status(200).json({
+                statusCode: 0,
+                statusValue: "FAIL",
+                message: result.error.details[0].message,
+            })
+        }
+        const checkfeedback = await feedbackModel.findOne({email:req.body.email});
+        const checkTicket = await assignTicketModel.findOne({ticket_number:req.body.ticket_number})
+        if (!!checkfeedback) {
+            return res.status(400).json({
+                statusCode: 400,
+                statusValue: "FAIL",
+                message: "You have already submitted feedback."
+            })
+        }
+        const feedbackData = new feedbackModel({
+            name:req.body.name,
+            email:req.body.email,
+            ratings:req.body.ratings,
+            message:req.body.message,
+            ticket_number:req.body.ticket_number,
+        });
+        // console.log(11, ticketData)
+        const saveDoc = await feedbackData.save();
+        if (!saveDoc) {
+            return res.status(400).json({
+                statusCode: 400,
+                statusValue: "FAIL",
+                message: "Feedback data not submitted.",
+            });
+        }
+        return res.status(201).json({
+            statusCode: 201,
+            statusValue: "SUCCESS",
+            message: "Feedback data added successfully!",
+        });
+    } catch (err) {
+        return res.status(500).json({
+            statusCode: 500,
+            statusValue: "FAIL",
+            message: "Internal server error",
+            data: {
+                generatedTime: new Date(),
+                errMsg: err.stack,
+            }
+        })
+    }
+}
 
 module.exports = {
     saveTicket,
@@ -324,4 +537,7 @@ module.exports = {
     updateTicket,
     getTicketDetails,
     addInstallationRecord,
+    getConcernedPerson,
+    submitFeedback,
+    getIndividualTicket
 }

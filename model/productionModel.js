@@ -9,10 +9,13 @@ const productionSchema = new mongoose.Schema({
     simNumber: { type: String, required: true, default: "" },
     productType: { type: String, required: true, default: "" },
     batchNumber: { type: String, required: true, default: "" },
-    iopr: { type: String, required: true, default: "" },
+    iopr: { type: String, default: "" },
+    serialNumber: { type: String, required: true, default: "" },
     manufacturingDate: {type: String, required: true, default: ""},
     dispatchDate: {type: String, required: true, default: ""},
-    
+    hospitalName: { type: String, default: "" },
+    dateOfWarranty: { type: String, default: "" },
+    address: { type: String, default: "" },
 },
     { timestamps: true }
 );

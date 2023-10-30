@@ -82,6 +82,10 @@ const s3BucketSchema = mongoose.Schema({
         type: String,
         default:""
     },
+    faultReason: {
+        type: String,
+        default: ""
+    },
 
 },
     { timestamps: true })

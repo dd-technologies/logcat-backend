@@ -34,6 +34,7 @@ const projectRouter = require("./route/projectRouter.js");
 const productionRouter = require("./route/productionRoute.js");
 const supportRouter = require("./route/supportRoute.js");
 var indexRouter = require('./route/index');
+const commonRouter = require("./route/commonRoute.js");
 
 
 // creating connection with DB
@@ -82,6 +83,8 @@ app.use("/projects", projectRouter);
 app.use("/production", productionRouter);
 app.use("/support/", supportRouter);
 app.use('/api/s3', indexRouter);
+app.use("/api/common", commonRouter);
+
 
 // Logs Routing
 app.use("/api/logger/logs", logs);

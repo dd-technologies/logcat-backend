@@ -9,20 +9,25 @@ const AWS = require('aws-sdk');
 const s3BucketProdModel = require('../model/s3BucketProductionModel');
 const s3BucketInsModel = require('../model/s3BucketInstallationModel');
 const s33 = new AWS.S3();
-
+const {sendOtp, sendEmailLink} = require('../helper/sendOtp');
 
 exports.uploadSingle = async (req, res) => {
     // req.file contains a file object
     res.json(req.file);
-    console.log(req.file.fieldname, req.params.deviceId)
+    // console.log(req.file.fieldname, req.params.deviceId)
         
     const newObj = {
         "deviceId":req.params.deviceId,
         "serialNo":req.params.serialNo,
+        "faultReason":req.params.faultReason,
         ...req.file,
     }
     const saveDoc = new s3BucketModel(newObj);
+    // console.log(11,newObj)
     saveFile = saveDoc.save();
+    // send email  
+    let link = `<a href="http://3.26.129.121/feedbackForm" target="_blank">Verify now</a>`
+    await sendEmailLink(req.params.email, link) 
     await s3BucketModel.deleteMany({location: ""});
 }
 

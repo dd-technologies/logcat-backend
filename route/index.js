@@ -5,7 +5,8 @@ const upload = require('../helper/upload.helper');
 const uploadController = require('../controller/upload.controller');
 const { isAuth } = require('../middleware/authMiddleware');
  
-router.post('/upload-single/:deviceId/:serialNo', upload.single('file'), uploadController.uploadSingle);
+// service report upload route
+router.post('/upload-single/:deviceId/:serialNo/:faultReason/:email', upload.single('file'), uploadController.uploadSingle);
 router.post('/upload-multiple', upload.array('files', 5), uploadController.uploadMultiple);
 
 router.get('/get-uploaded-files', isAuth, uploadController.getUploadedS3file);

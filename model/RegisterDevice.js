@@ -15,6 +15,11 @@ const RegisterDeviceSchema = mongoose.Schema({
         type: String,
         // unique: true,
     },
+    Alias_Name: {
+        type: String,
+        // required: true,
+        default: ""
+    },
     Department_Name: {
         required: [true, 'Department name is required'],
         type: String

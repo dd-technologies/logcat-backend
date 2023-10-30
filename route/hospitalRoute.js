@@ -6,12 +6,12 @@ const hospitalController = require('../controller/hospitalController');
 
 // Hospital routes
 
-router.post('/register-hospital', isAuth, isAdmin, hospitalController.saveHospital)
+router.post('/register-hospital', isAuth, hospitalController.saveHospital)
 router.get('/hospital-list/:State', hospitalController.getHospitalList);
 router.get('/hospital-list', hospitalController.getHospitalList);
 router.get('/get-byid/:id', hospitalController.getSingleHospital);
-router.put('/update-hospital', isAuth, isAdmin, hospitalController.updateHospital);
-router.delete('/delete-byid/:id', isAuth, isAdmin, hospitalController.deleteHospital);
+router.put('/update-hospital', isAuth, hospitalController.updateHospital);
+router.delete('/delete-byid/:id', isAuth, hospitalController.deleteHospital);
 
 
 

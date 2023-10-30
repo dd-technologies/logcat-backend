@@ -12,8 +12,7 @@ const ticketSchema = mongoose.Schema({
     },
     ticket_number: { 
         type: String,
-        required: true,
-        unique: true,
+        default: ""
     },
     ticket_owner: { 
         type: String,
@@ -24,6 +23,10 @@ const ticketSchema = mongoose.Schema({
         enum: ["Pending", "Not-Done", "Completed"],
         default: "Pending",
     },
+    ticket_status: {
+        type: String,
+        enum: ["Open", "Re-Open", "Close"],
+    },
     priority: {
         type: String,
         enum: ["Critical", "Medium"],
@@ -33,7 +36,19 @@ const ticketSchema = mongoose.Schema({
         type: String,
         default:""
     },
+    concerned_p_name: {                   // new added 25oct
+        type: String,
+        default:""
+    },
+    concerned_p_email: {                   // new added 25oct
+        type: String,
+        default:""
+    },
     concerned_p_contact: { 
+        type: String,
+        default:""
+    },
+    details: {
         type: String,
         default:""
     },
@@ -45,14 +60,34 @@ const ticketSchema = mongoose.Schema({
         type: String,
         default:""
     },
-    details: {
-        type: String,
-        default:""
-    },
     address: {
         type: String,
         default: ""
+    },
+    // new requirements
+    pincode: {                 // new added 25oct
+        type: String,
+        default: ""
+    },
+    dept_name: {                   // new added 25oct
+        type: String,
+        default: ""
+    },
+    waranty_status: {                // new added 25oct
+        type: String,
+        default: ""
+    },
+    serialNumber: {
+        type: String,
+        default: ""
+    },
+    tag: {                      // new added 26oct
+        type: String,
+        default: "",
+        required: true,
     }
+
+
 },
     { timestamps: true })
 

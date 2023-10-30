@@ -45,10 +45,29 @@ const createDevice = async (req, res) => {
     // const verified = await jwtr.verify(token, process.env.JWT_SECRET);
     // const loggedInUser = await User.findById({_id:verified.user});
     // const normalUser = await User.findById({_id:req.body._id});
+    
 
+    // give alias name of deviceId
+    const Alias_Str = "AgPr";
+    const ranNum = Math.floor(1000 + Math.random() * 9000);
+    let Alias_Name = `${Alias_Str}-${ranNum}`
+    // check aliasname
+    const checkAlias = await Device.findOne({Alias_Name:Alias_Name})
+    if (checkAlias) {
+      Alias_Name = `${Alias_Str}-${ranNum}`
+    }
     const deviceData = await Device.findOneAndUpdate(
       { DeviceId: req.body.DeviceId },
-      req.body,
+      {
+        DeviceId:req.body.DeviceId,
+        Alias_Name:Alias_Name,
+        Department_Name:req.body.Department_Name,
+        Hospital_Name:req.body.Hospital_Name,
+        Ward_No:req.body.Ward_No,
+        Doctor_Name:req.body.Doctor_Name,
+        IMEI_NO:req.body.IMEI_NO,
+        Bio_Med:req.body.Bio_Med,
+      },
       { upsert: true, new: true }
     );
     // const newDevice = new Device(req.body);
@@ -70,6 +89,7 @@ const createDevice = async (req, res) => {
     });
   }
 };
+
 
 /**
  * api      UPDATE @/devices/update/DeviceId
@@ -183,6 +203,7 @@ const getDeviceById = async (req, res) => {
     data = {
       '_id':data._id,
       'DeviceId':data.DeviceId,
+      'Alias_Name':data.Alias_Name,
       'Bio_Med':data.Bio_Med,
       'Department_Name':data.Department_Name,
       'Doctor_Name':data.Doctor_Name,

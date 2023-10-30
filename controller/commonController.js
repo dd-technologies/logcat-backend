@@ -1,0 +1,127 @@
+const bcrypt = require('bcrypt');
+const { makeId } = require('../helper/helperFunctions');
+const JWTR = require('jwt-redis').default;
+const Users = require('../model/users');
+// const ForgetPassword = require('../model/forgetPassword');
+const Email = require('../utils/email');
+let redisClient = require('../config/redisInit');
+const { validationResult } = require('express-validator');
+const verifyUserOrAdmin = require('../middleware/verifyUserOrAdmin');
+const mongoose = require('mongoose');
+
+const jwtr = new JWTR(redisClient);
+const Joi = require('joi');
+const User = require('../model/users');
+const sendEmail = require('../helper/sendEmail.js');
+const sendInBlueEmail = require('../helper/sendInBlueEmail.js');
+const errorHandler = require('../middleware/errorHandler.js');
+const sendOtp = require('../helper/sendOtp');
+const emailVerificationModel = require('../model/emailVerificationModel');
+
+
+// send otp
+const sendVerificationEmail = async (req, res) => {
+    try {
+        const schema = Joi.object({
+            email: Joi.string().email().required(),
+        })
+        let result = schema.validate(req.body);
+        if (result.error) {
+            return res.status(400).json({
+                statusCode: 400,
+                statusValue: "FAIL",
+                message: result.error.details[0].message,
+            });
+        };
+        // console.log(req.body)
+        const checkStatus = await emailVerificationModel.findOne({email:req.body.email})
+        if(!!checkStatus && checkStatus.status == "Verified") {
+            return res.status(400).json({
+                statusCode: 400,
+                statusValue: "FAIL",
+                message: "Already verified.",
+                data:checkStatus.status
+            });
+        }
+        var otp = Math.floor(1000 + Math.random() * 9000);
+        const saveOtp = await emailVerificationModel.findOneAndUpdate({
+            email:req.body.email
+        },{
+            email:req.body.email,
+            otp:otp,
+            status:"Notverified"
+        }, {upsert: true, new: true});
+        if (!saveOtp) {
+            return res.status(400).json({
+                statusCode: 400,
+                statusValue: "FAIL",
+                message: "otp not sended.",
+            });
+        }
+        // await sendOtp(req.body.email, otp)
+        res.status(200).json({
+            statusCode: 200,
+            statusValue: "SUCCESS",
+            message: "Otp send successfully.",
+            otp
+        });
+        
+    } catch (err) {
+        return res.status(500).json({
+            statusCode: 500,
+            statusValue: "FAIL",
+            message: "Internal server error.",
+            data: {
+                generatedTime: new Date(),
+                errMsg: err.stack,
+            }
+        });
+    }
+}
+
+const verifyOtp = async (req, res) => {
+    try {
+      const schema = Joi.object({
+        otp: Joi.string().required(),
+      })
+      let result = schema.validate(req.body);
+      if (result.error) {
+        return res.status(400).json({
+          statusCode: 400,
+          statusValue: "FAIL",
+          message: result.error.details[0].message,
+        })
+      }
+      const checkOtp = await emailVerificationModel.findOne({ otp: req.body.otp });
+      if (!checkOtp) {
+        return res.status(400).json({
+          statusCode: 400,
+          statusValue: "FAIL",
+          message: "You have entered wrong otp",
+        })
+      }
+      await emailVerificationModel.findOneAndUpdate({otp:req.body.otp},{status:"Verified"})
+      res.status(200).json({
+        statusCode: 200,
+        statusValue: "SUCCESS",
+        message: "Otp verified successfully."
+      })
+    } catch (err) {
+      return res.status(500).json({
+        statusCode: 500,
+        statusValue: "FAIL",
+        message: "Internal server error.",
+        data: {
+          generatedTime: new Date(),
+          errMsg: err.stack,
+        }
+      });
+    }
+}
+
+
+
+module.exports = {
+    sendVerificationEmail,
+    verifyOtp
+}
