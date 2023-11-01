@@ -78,7 +78,6 @@ const saveTicket = async (req, res) => {
             tag:req.body.tag,
             address:!!getAddress? getAddress.address : "",
             hospital_name:!!getHospital? getHospital.Hospital_Name : "",
-
         });
         // console.log(11, ticketData)
         const saveDoc = await ticketData.save();
@@ -262,6 +261,7 @@ const updateTicket = async (req, res) => {
             status: Joi.string().valid("Pending", "Not-Done", "Completed").optional(),
             service_engineer: Joi.string().optional(),
             ticket_status: Joi.string().valid("Re-Open", "Close").optional(),
+            isFeedback: Joi.string().valid("Submitted","Not-Submitted","Submitted-Without-Feedback").optional(),
         })
         let result = schema.validate(req.body);
         if (result.error) {
@@ -271,9 +271,32 @@ const updateTicket = async (req, res) => {
                 message: result.error.details[0].message,
             })
         }
-        // console.log(123, req.body);
+        if(req.body.ticket_status == "Close") {
+            const updateDoc = await assignTicketModel.findByIdAndUpdate(
+                {_id:req.body.id},
+                {status:"Completed",ticket_status:"Close"},
+                { new: true }
+            );
+            return res.status(200).json({
+                statusCode: 200,
+                statusValue: "SUCCESS",
+                message: "Data updated successfully.",
+                data: updateDoc,
+            });
+        } else if (req.body.ticket_status == "Re-Open") {
+            const updateDoc = await assignTicketModel.findByIdAndUpdate(
+                {_id:req.body.id},
+                {status:"Pending",ticket_status:"Re-Open"},
+                { new: true }
+            );
+            return res.status(200).json({
+                statusCode: 200,
+                statusValue: "SUCCESS",
+                message: "Data updated successfully.",
+                data: updateDoc,
+            });
+        }
         const updateDoc = await assignTicketModel.findByIdAndUpdate({_id:req.body.id}, req.body, { new: true });
-        // console.log(11, updateDoc)
         if (!!updateDoc) {
             return res.status(200).json({
                 statusCode: 200,
@@ -285,7 +308,7 @@ const updateTicket = async (req, res) => {
         return res.status(400).json({
             statusCode: 400,
             statusValue: "FAIL",
-            message: "Data updated successfully.",
+            message: "Data not updated.",
             data: updateDoc
         });
     } catch (err) {
@@ -309,7 +332,41 @@ const updateTicket = async (req, res) => {
 const getTicketDetails = async (req, res) => {
     try {
         const id = req.params.id;
-        const data = await assignTicketModel.findById({_id:req.params.id}, { __v: 0, updatedAt: 0 });
+        const data = await assignTicketModel.findById({_id:req.params.id});
+        if (!data) {
+            return res.status(404).json({
+                statusCode: 404,
+                statusValue: "FAIL",
+                message: "Data not found."
+            });
+        }
+        return res.status(200).json({
+            statusCode: 200,
+            statusValue: "SUCCESS",
+            message: "Data get successfully.",
+            data: data
+        })
+    } catch (err) {
+        return res.status(500).json({
+            statusCode: 500,
+            statusValue: "FAIL",
+            message: "Internal server error",
+            data: {
+                generatedTime: new Date(),
+                errMsg: err.stack,
+            }
+        })
+    }
+}
+
+/**
+* api      GET @/support/get-ticket/:id
+* desc     @getTicketDetails for logger access only
+*/
+const getTicketByTicketNumber = async (req, res) => {
+    try {
+        const ticket_number = req.params.ticket_number;
+        const data = await assignTicketModel.findOne({ticket_number:req.params.ticket_number});
         if (!data) {
             return res.status(404).json({
                 statusCode: 404,
@@ -433,8 +490,14 @@ const getConcernedPerson = async (req, res) => {
  */
 const getIndividualTicket = async (req, res) => {
     try {
-        const getData = await assignTicketModel.find({concerned_p_email:req.params.email})
-        .select({ticket_number:1,concerned_p_email:1
+        const getData = await assignTicketModel.find({
+            $and:[
+                {concerned_p_email:req.params.email},
+                {ticket_status:"Close"},
+                {isFeedback:"Not-Submitted"}
+            ]
+        })
+        .select({ticket_number:1,concerned_p_email:1,ticket_status:1
         })
         // console.log(getData)
         if (getData) {
@@ -465,7 +528,6 @@ const getIndividualTicket = async (req, res) => {
 }
 
 
-
 /**
 * api      POST @/support/submit-feedback
 * desc     @submitFeedback 
@@ -478,6 +540,7 @@ const submitFeedback = async (req, res) => {
             ratings : Joi.string().required(),
             message : Joi.string().required(),
             ticket_number: Joi.string().required(),
+            concerned_p_contact: Joi.string().required(),
         })
         let result = schema.validate(req.body);
         if (result.error) {
@@ -488,7 +551,7 @@ const submitFeedback = async (req, res) => {
             })
         }
         const checkfeedback = await feedbackModel.findOne({email:req.body.email});
-        const checkTicket = await assignTicketModel.findOne({ticket_number:req.body.ticket_number})
+
         if (!!checkfeedback) {
             return res.status(400).json({
                 statusCode: 400,
@@ -502,8 +565,10 @@ const submitFeedback = async (req, res) => {
             ratings:req.body.ratings,
             message:req.body.message,
             ticket_number:req.body.ticket_number,
+            concerned_p_contact:req.body.concerned_p_contact,
         });
-        // console.log(11, ticketData)
+        // update isFeedback
+        
         const saveDoc = await feedbackData.save();
         if (!saveDoc) {
             return res.status(400).json({
@@ -512,12 +577,16 @@ const submitFeedback = async (req, res) => {
                 message: "Feedback data not submitted.",
             });
         }
+        await assignTicketModel.findOneAndUpdate(
+            {ticket_number:req.body.ticket_number},
+            {isFeedback:true,status:"Completed"},
+            {upsert:true});
         return res.status(201).json({
             statusCode: 201,
             statusValue: "SUCCESS",
             message: "Feedback data added successfully!",
         });
-    } catch (err) {
+    } catch (err) { ``
         return res.status(500).json({
             statusCode: 500,
             statusValue: "FAIL",
@@ -530,6 +599,8 @@ const submitFeedback = async (req, res) => {
     }
 }
 
+
+
 module.exports = {
     saveTicket,
     getAllTickets,
@@ -539,5 +610,6 @@ module.exports = {
     addInstallationRecord,
     getConcernedPerson,
     submitFeedback,
-    getIndividualTicket
+    getIndividualTicket,
+    getTicketByTicketNumber
 }

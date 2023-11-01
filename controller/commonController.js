@@ -17,7 +17,7 @@ const sendInBlueEmail = require('../helper/sendInBlueEmail.js');
 const errorHandler = require('../middleware/errorHandler.js');
 const sendOtp = require('../helper/sendOtp');
 const emailVerificationModel = require('../model/emailVerificationModel');
-
+var query = require('india-pincode-search');
 
 // send otp
 const sendVerificationEmail = async (req, res) => {
@@ -119,9 +119,40 @@ const verifyOtp = async (req, res) => {
     }
 }
 
+const getCountryByPincode = async (req, res) => {
+  try {
+    
+    const getData = query.search(req.params.pincode);
+    if (!getData) {
+      return res.status(400).json({
+        statusCode: 400,
+        statusValue: "FAIL",
+        message: "You have entered wrong otp",
+      })
+    }
+    return res.status(200).json({
+      statusCode: 200,
+      statusValue: "SUCCESS",
+      message: "Data get successfully.",
+      data:getData,
+    })
+    
+  } catch (err) {
+    return res.status(500).json({
+      statusCode: 500,
+      statusValue: "FAIL",
+      message: "Internal server error.",
+      data: {
+        generatedTime: new Date(),
+        errMsg: err.stack,
+      }
+    });
+  }
+}
 
 
 module.exports = {
     sendVerificationEmail,
-    verifyOtp
+    verifyOtp,
+    getCountryByPincode
 }

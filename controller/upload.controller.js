@@ -26,7 +26,7 @@ exports.uploadSingle = async (req, res) => {
     // console.log(11,newObj)
     saveFile = saveDoc.save();
     // send email  
-    let link = `<a href="http://3.26.129.121/feedbackForm" target="_blank">Verify now</a>`
+    let link = `<a href="http://3.26.129.121/service_feedback" target="_blank">Submit Feedback</a>`
     await sendEmailLink(req.params.email, link) 
     await s3BucketModel.deleteMany({location: ""});
 }

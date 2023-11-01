@@ -82,6 +82,18 @@ const aboutSchema = mongoose.Schema({
         type: String,
         default:""
     },
+    state:{
+        type: String,
+        default: "",
+    },
+    city: {
+        type: String,
+        default: "",
+    },
+    district: {
+       type: String,
+       default: "",
+    },
 
 },
     { timestamps: true })

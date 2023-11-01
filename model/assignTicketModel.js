@@ -85,8 +85,12 @@ const ticketSchema = mongoose.Schema({
         type: String,
         default: "",
         required: true,
-    }
-
+    },
+    isFeedback: {
+        type: String,
+        enum: ["Submitted","Not-Submitted","Submitted-Without-Feedback"],
+        default: "Not-Submitted",
+    },
 
 },
     { timestamps: true })

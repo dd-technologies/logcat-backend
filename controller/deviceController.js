@@ -606,6 +606,9 @@ const addAboutDevice = async (req, res) => {
       pincode: Joi.string().required(),
       distributor_name: Joi.string().allow(''), // not required
       distributor_contact: Joi.string().allow(''),     // not required
+      state: Joi.string().allow("").optional(),
+      city: Joi.string().allow("").optional(),
+      district: Joi.string().allow("").optional(),
     });
     const result = schema.validate(req.body);
     if (result.error) {

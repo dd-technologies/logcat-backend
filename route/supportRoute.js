@@ -14,6 +14,7 @@ router.get('/get-tickets',isAuth, supportController.getAllTickets);
 router.delete('/delete-ticket/:id',isAuth, supportController.deleteTicket);
 router.put('/update-ticket',isAuth, supportController.updateTicket);
 router.get('/get-ticket/:id',isAuth, supportController.getTicketDetails);
+router.get('/get-ticket-details/:ticket_number', supportController.getTicketByTicketNumber);
 router.post('/add-installation-record', isAuth, supportController.addInstallationRecord);
 // router.post('/upload-installation-report',  supportController.addInstallationReport);
 router.get('/get-concerned-person/:concerned_p_contact', supportController.getConcernedPerson);

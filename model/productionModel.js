@@ -16,6 +16,8 @@ const productionSchema = new mongoose.Schema({
     hospitalName: { type: String, default: "" },
     dateOfWarranty: { type: String, default: "" },
     address: { type: String, default: "" },
+    hw_version: { type: String, default: "" },
+    sw_version: { type: String, default: "" },
 },
     { timestamps: true }
 );

@@ -7,6 +7,7 @@ const commonController = require("../controller/commonController.js");
 // common routes
 router.post("/send-verification-email", commonController.sendVerificationEmail);
 router.post("/verify-otp", commonController.verifyOtp);
+router.get("/search-by-pincode/:pincode", commonController.getCountryByPincode);
 
 
 

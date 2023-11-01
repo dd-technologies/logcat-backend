@@ -26,6 +26,8 @@ const createProduction = async (req, res) => {
             serialNumber: Joi.string().required(),
             manufacturingDate: Joi.string().required(),
             dispatchDate: Joi.string().required(),
+            hw_version: Joi.string().allow("").required(),
+            sw_version: Joi.string().allow("").required(),
         })
         let result = schema.validate(req.body);
         if (result.error) {
@@ -55,6 +57,8 @@ const createProduction = async (req, res) => {
             hospitalName:!!getHospital? getHospital.Hospital_Name : "",
             dateOfWarranty:!!getWaranty? getWaranty.dateOfWarranty : "",
             address:!!getAddress? getAddress.address : "",
+            hw_version:req.body.hw_version,
+            sw_version:req.body.sw_version,
         });
         // console.log(11,productionData)
         const saveDoc = await productionData.save();

@@ -22,6 +22,10 @@ const feedbackSchema = mongoose.Schema({
         type: String,
         default: ""
     },
+    concerned_p_contact: {
+        type: String,
+        default: "",
+    },
 
 },
     { timestamps: true })
