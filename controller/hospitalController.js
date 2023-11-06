@@ -17,6 +17,10 @@ const saveHospital = async (req, res) => {
             Hospital_Address: Joi.string().required(),
             Country: Joi.string().required(),
             State: Joi.string().required(),
+            City: Joi.string().required(),
+            District: Joi.string().required(),
+            Pincode: Joi.string().required(),
+            
         })
         let result = schema.validate(req.body);
         if (result.error) {
@@ -69,6 +73,9 @@ const updateHospital = async (req, res) => {
             Hospital_Address: Joi.string().required(),
             Country: Joi.string().required(),
             State: Joi.string().required(),
+            City: Joi.string().required(),
+            District: Joi.string().required(),
+            Pincode: Joi.string().required(),
         })
         let result = schema.validate(req.body);
         if (result.error) {
@@ -93,6 +100,9 @@ const updateHospital = async (req, res) => {
                 Hospital_Address:req.body.Hospital_Address,
                 Country:req.body.Country,
                 State:req.body.State,
+                City:req.body.City,
+                District:req.body.District,
+                Pincode:req.body.Pincode,
             },
             { new: true }
         );

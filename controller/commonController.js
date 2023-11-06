@@ -15,11 +15,15 @@ const User = require('../model/users');
 const sendEmail = require('../helper/sendEmail.js');
 const sendInBlueEmail = require('../helper/sendInBlueEmail.js');
 const errorHandler = require('../middleware/errorHandler.js');
-const sendOtp = require('../helper/sendOtp');
+const {sendOtp} = require('../helper/sendOtp');
 const emailVerificationModel = require('../model/emailVerificationModel');
 var query = require('india-pincode-search');
 
-// send otp
+
+/**
+* api      POST @/api/common/send-verification-email
+* desc     @sendVerificationEmail for logger access only
+*/
 const sendVerificationEmail = async (req, res) => {
     try {
         const schema = Joi.object({
@@ -58,7 +62,7 @@ const sendVerificationEmail = async (req, res) => {
                 message: "otp not sended.",
             });
         }
-        // await sendOtp(req.body.email, otp)
+        await sendOtp(req.body.email, otp)
         res.status(200).json({
             statusCode: 200,
             statusValue: "SUCCESS",
@@ -79,6 +83,11 @@ const sendVerificationEmail = async (req, res) => {
     }
 }
 
+
+/**
+* api      POST @/api/common/verify-otp
+* desc     @verifyOtp for logger access only
+*/
 const verifyOtp = async (req, res) => {
     try {
       const schema = Joi.object({
@@ -119,15 +128,19 @@ const verifyOtp = async (req, res) => {
     }
 }
 
+
+/**
+* api      GET @/common/search-by-pincode/:pincode
+* desc     @getCountryByPincode for public access
+*/
 const getCountryByPincode = async (req, res) => {
   try {
-    
     const getData = query.search(req.params.pincode);
-    if (!getData) {
+    if (getData.length < 1) {
       return res.status(400).json({
         statusCode: 400,
         statusValue: "FAIL",
-        message: "You have entered wrong otp",
+        message: "Opps something went wrong! Or Invalid pincode.",
       })
     }
     return res.status(200).json({

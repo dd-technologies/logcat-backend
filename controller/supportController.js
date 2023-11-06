@@ -14,6 +14,7 @@ const Device = require('../model/RegisterDevice');
 const feedbackModel = require('../model/feedbackModel');
 const JWTR = require("jwt-redis").default;
 const jwtr = new JWTR(redisClient);
+const {sendOtp, sendEmailLink} = require('../helper/sendOtp');
 
 
 /**
@@ -26,7 +27,7 @@ const saveTicket = async (req, res) => {
             deviceId: Joi.string().required(),
             service_engineer: Joi.string().required(),
             issues: Joi.string().required(),
-            pincode: Joi.string().required(),
+            pincode: Joi.string().allow("").required(),
             dept_name: Joi.string().required(),
             concerned_p_name: Joi.string().required(),
             concerned_p_email: Joi.string().required(),
@@ -92,6 +93,7 @@ const saveTicket = async (req, res) => {
             statusCode: 201,
             statusValue: "SUCCESS",
             message: "Ticket assigned successfully!",
+            data:saveDoc
         });
     } catch (err) {
         return res.status(500).json({
@@ -271,12 +273,15 @@ const updateTicket = async (req, res) => {
                 message: result.error.details[0].message,
             })
         }
+        const getEmail = await assignTicketModel.findById({_id:req.body.id});
+        const feedbackUrl = `<a style='text-decoration:none;color:white'' href="http://3.26.129.121:3000/service_feedback" target="_blank">Submit Feedback!</a>`
         if(req.body.ticket_status == "Close") {
             const updateDoc = await assignTicketModel.findByIdAndUpdate(
                 {_id:req.body.id},
                 {status:"Completed",ticket_status:"Close"},
                 { new: true }
             );
+            await sendEmailLink(getEmail.concerned_p_email, feedbackUrl)
             return res.status(200).json({
                 statusCode: 200,
                 statusValue: "SUCCESS",
@@ -366,7 +371,8 @@ const getTicketDetails = async (req, res) => {
 const getTicketByTicketNumber = async (req, res) => {
     try {
         const ticket_number = req.params.ticket_number;
-        const data = await assignTicketModel.findOne({ticket_number:req.params.ticket_number});
+        const data = await assignTicketModel.findOne({ticket_number:req.params.ticket_number},{__v:0});
+        const feedbackData = await feedbackModel.findOne({ticket_number:req.params.ticket_number},{__v:0,});
         if (!data) {
             return res.status(404).json({
                 statusCode: 404,
@@ -378,7 +384,8 @@ const getTicketByTicketNumber = async (req, res) => {
             statusCode: 200,
             statusValue: "SUCCESS",
             message: "Data get successfully.",
-            data: data
+            data: data,
+            feedback:feedbackData
         })
     } catch (err) {
         return res.status(500).json({
@@ -550,7 +557,7 @@ const submitFeedback = async (req, res) => {
                 message: result.error.details[0].message,
             })
         }
-        const checkfeedback = await feedbackModel.findOne({email:req.body.email});
+        const checkfeedback = await feedbackModel.findOne({ticket_number:req.body.ticket_number});
 
         if (!!checkfeedback) {
             return res.status(400).json({
@@ -579,14 +586,14 @@ const submitFeedback = async (req, res) => {
         }
         await assignTicketModel.findOneAndUpdate(
             {ticket_number:req.body.ticket_number},
-            {isFeedback:true,status:"Completed"},
+            {isFeedback:"Submitted",status:"Completed"},
             {upsert:true});
         return res.status(201).json({
             statusCode: 201,
             statusValue: "SUCCESS",
             message: "Feedback data added successfully!",
         });
-    } catch (err) { ``
+    } catch (err) {
         return res.status(500).json({
             statusCode: 500,
             statusValue: "FAIL",

@@ -19,13 +19,13 @@ const createProduction = async (req, res) => {
     try {
         const schema = Joi.object({
             deviceId: Joi.string().required(),
-            purpose: Joi.string().required(),
+            // purpose: Joi.string().required(),
             simNumber: Joi.string().required(),
             productType: Joi.string().required(),
             batchNumber: Joi.string().required(),
             serialNumber: Joi.string().required(),
             manufacturingDate: Joi.string().required(),
-            dispatchDate: Joi.string().required(),
+            // dispatchDate: Joi.string().required(),
             hw_version: Joi.string().allow("").required(),
             sw_version: Joi.string().allow("").required(),
         })
@@ -41,39 +41,43 @@ const createProduction = async (req, res) => {
         // const project_code = req.params.project_code;
         const getHospital = await Device.findOne({DeviceId:req.body.deviceId})
         // console.log(11,getHospital)
-        const getWaranty = await installationModel.findOne({deviceId:req.body.deviceId})
+        // const getWaranty = await installationModel.findOne({deviceId:req.body.deviceId})
         const getAddress = await aboutDeviceModel.findOne({deviceId:req.body.deviceId})
         // console.log(12,getAddress)
         // console.log(13,getWaranty)
-        const productionData = new productionModel({
-            deviceId:req.body.deviceId,
-            purpose:req.body.purpose,
-            simNumber:req.body.simNumber,
-            productType:req.body.productType,
-            batchNumber:req.body.batchNumber,
-            serialNumber:req.body.serialNumber,
-            manufacturingDate:req.body.manufacturingDate,
-            dispatchDate:req.body.dispatchDate,
-            hospitalName:!!getHospital? getHospital.Hospital_Name : "",
-            dateOfWarranty:!!getWaranty? getWaranty.dateOfWarranty : "",
-            address:!!getAddress? getAddress.address : "",
-            hw_version:req.body.hw_version,
-            sw_version:req.body.sw_version,
-        });
+        const productionData = await productionModel.findOneAndUpdate({deviceId:req.body.deviceId},
+            {
+                deviceId:req.body.deviceId,
+                // purpose:req.body.purpose,
+                simNumber:req.body.simNumber,
+                productType:req.body.productType,
+                batchNumber:req.body.batchNumber,
+                serialNumber:req.body.serialNumber,
+                manufacturingDate:req.body.manufacturingDate,
+                // dispatchDate:req.body.dispatchDate,
+                hospitalName:!!getHospital? getHospital.Hospital_Name : "NA",
+                dateOfWarranty:!!getAddress? getAddress.date_of_warranty : "NA",
+                address:!!getAddress? getAddress.address : "NA",
+                hw_version:req.body.hw_version,
+                sw_version:req.body.sw_version,
+            },
+            { upsert:true, new: true },
+        );
         // console.log(11,productionData)
-        const saveDoc = await productionData.save();
-        if (!saveDoc) {
-            return res.status(400).json({
-                statusCode: 400,
-                statusValue: "FAIL",
-                message: "Production data not saved."
+        // const saveDoc = await productionData.save();
+        if (!productionData) {
+            return res.status(201).json({
+                statusCode: 201,
+                statusValue: "SUCCESS",
+                message: "Production data has been saved successfully.",
+                data: productionData
             });
         }
         return res.status(201).json({
             statusCode: 201,
             statusValue: "SUCCESS",
             message: "Production data has been saved successfully.",
-            data: saveDoc
+            data: productionData
         });
     } catch (err) {
         return res.status(500).json({
@@ -226,6 +230,43 @@ const getProductionBySrNo = async (req, res) => {
 /*
 * @param {*} req 
 * @param {*} res 
+* api GET@/production/get-by-serialNumber/:serialNumber
+*/
+const getProductionDevices = async (req, res) => {
+    try {
+        const data = await productionModel.find({})
+        .select({ deviceId:1, _id:0 })
+        if (!data) {
+            return res.status(404).json({
+                statusCode: 404,
+                statusValue: "FAIL",
+                message: "Data not found.",
+                data: {},
+            })
+        }
+        return res.status(200).json({
+            statusCode: 200,
+            statusValue: "SUCCESS",
+            message: "production devices get successfully!",
+            data: data,
+        });
+    } catch (err) {
+        res.status(500).json({
+            statusCode: 500,
+            statusValue: "FAIL",
+            message: "Internal server error",
+            data: {
+                generatedTime: new Date(),
+                errMsg: err.stack,
+            }
+        })
+    }
+}
+
+
+/*
+* @param {*} req 
+* @param {*} res 
 * api PUT@/production/update-production
 */
 const updateProduction = async (req, res) => {
@@ -233,13 +274,13 @@ const updateProduction = async (req, res) => {
         const schema = Joi.object({
             id:Joi.string().required(),
             deviceId: Joi.string().required(),
-            purpose: Joi.string().required(),
+            // purpose: Joi.string().required(),
             simNumber: Joi.string().required(),
             productType: Joi.string().required(),
             batchNumber: Joi.string().required(),
             serialNumber: Joi.string().required(),
             manufacturingDate: Joi.string().required(),
-            dispatchDate: Joi.string().required(),
+            // dispatchDate: Joi.string().required(),
         })
         let result = schema.validate(req.body);
         if (result.error) {
@@ -330,4 +371,5 @@ module.exports = {
     updateProduction,
     deleteProductionById,
     getProductionBySrNo,
+    getProductionDevices
 }

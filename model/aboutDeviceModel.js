@@ -54,6 +54,10 @@ const aboutSchema = mongoose.Schema({
         required:true,
         default:""
     },
+    date_of_warranty: {
+        type: String,
+        default: "",
+    },
     hospital_name: { 
         type: String,
         required:true,

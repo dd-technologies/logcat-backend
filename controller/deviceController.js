@@ -604,11 +604,11 @@ const addAboutDevice = async (req, res) => {
       phone_number: Joi.string().required(),
       sim_no: Joi.string(),                     // not required
       pincode: Joi.string().required(),
-      distributor_name: Joi.string().allow(''), // not required
-      distributor_contact: Joi.string().allow(''),     // not required
-      state: Joi.string().allow("").optional(),
-      city: Joi.string().allow("").optional(),
-      district: Joi.string().allow("").optional(),
+      distributor_name: Joi.string().allow("").optional(), // not required
+      distributor_contact: Joi.string().allow('').optional(),     // not required
+      state: Joi.string().allow("").required(),
+      city: Joi.string().allow("").required(),
+      district: Joi.string().allow("").required(),
     });
     const result = schema.validate(req.body);
     if (result.error) {
@@ -619,11 +619,58 @@ const addAboutDevice = async (req, res) => {
       });
     }
     const project_code = req.query.project_code;
+    
+    // set date of warranty
+    function addOneYear(date) {
+      date.setFullYear(date.getFullYear() + 1);
+      return date;
+    }
+    const date = new Date(new Date());
+    const date_of_warranty = addOneYear(date);
+    const cstr = date_of_warranty.toISOString()
+    const finalDate = cstr.split("T")
+    // console.log(11,nStr[0])
+    // get hospital
+    const getHospital = await Device.findOne({DeviceId:req.body.deviceId});
+    // console.log(11,getHospital)
+    // get Production data
+    const getProduction = await productionModel.findOne({deviceId:req.body.deviceId});
+    // console.log(22, getProduction)
     const saveDispatchData = await aboutDeviceModel.findOneAndUpdate(
       { deviceId: req.body.deviceId },
-      req.body,
+      {
+        deviceId:req.body.deviceId,
+        product_type:!!getProduction? getProduction.productType : req.body.product_type,
+        serial_no:!!getProduction? getProduction.serialNumber : req.body.serial_no,
+        purpose:req.body.purpose,
+        concerned_person:req.body.concerned_person,
+        batch_no:!!getProduction? getProduction.batchNumber : req.body.batch_no,
+        date_of_manufacturing:!!getProduction? getProduction.manufacturingDate : req.body.date_of_manufacturing,
+        address:!!getProduction? getProduction.address : req.body.address,
+        date_of_dispatch:req.body.date_of_dispatch,
+        hospital_name:!!getHospital? getHospital.Hospital_Name : req.body.hospital_name,
+        phone_number:req.body.phone_number,
+        sim_no:!!getProduction? getProduction.simNumber : "NA",
+        pincode:req.body.pincode,
+        distributor_name:(!!req.body.distributor_name)? req.body.distributor_name : "NA",
+        distributor_contact:(!!req.body.distributor_contact)? req.body.distributor_contact : "NA",
+        state:(!!req.body.state)? req.body.state : "NA",
+        city:(!!req.body.city)? req.body.city : "NA",
+        district:(!!req.body.district)? req.body.district : "NA",
+        date_of_warranty:finalDate[0],
+      },
       { upsert: true }
     );
+    const checkData = await aboutDeviceModel.findOne({deviceId:req.body.deviceId});
+    if(!!checkData) {
+      await productionModel.findOneAndUpdate({deviceId:checkData.deviceId},{hospitalName:checkData.hospital_name});
+      return res.status(201).json({
+        statusCode: 201,
+        statusValue: "SUCCESS",
+        message: "Data added successfully.",
+      });
+    }
+    // console.log(33,saveDispatchData)
     return res.status(201).json({
       statusCode: 201,
       statusValue: "SUCCESS",
@@ -671,6 +718,10 @@ const getDispatchData = async (req, res) => {
       "pincode":1,
       "distributor_name":1,
       "distributor_contact":1,
+      "state":1,
+      "city":1,
+      "district":1,
+      "date_of_warranty":1,
     }).sort({updatedAt:-1});
     const paginateArray =  (dispatchData, page, limit) => {
       const skip = dispatchData.slice((page - 1) * limit, page * limit);
@@ -727,6 +778,10 @@ const getDispatchDataById = async (req, res) => {
       "pincode":1,
       "distributor_name":1,
       "distributor_contact":1,
+      "state":1,
+      "city":1,
+      "district":1,
+      "date_of_warranty":1,
     }).sort({updatedAt:-1}).limit(1);
     const servicesData = await servicesModel.find({ "deviceId":req.params.deviceId },
     {
@@ -761,6 +816,7 @@ const getDispatchDataById = async (req, res) => {
 
 let redisClient = require("../config/redisInit");
 const activityModel = require('../model/activityModel');
+const productionModel = require('../model/productionModel');
 
 const JWTR = require("jwt-redis").default;
 const jwtr = new JWTR(redisClient);
