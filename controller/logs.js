@@ -752,7 +752,9 @@ const getAllDeviceId1 = async (req, res) => {
   }
 };
 
-const getAllDeviceId = async (req, res) => {
+
+// get all devices
+const getAllDeviceId2 = async (req, res) => {
   try {
      // Search
      var search = "";
@@ -884,6 +886,151 @@ const getAllDeviceId = async (req, res) => {
   };
 
     
+
+  var allDevices = paginateArray(arrayUniqueByKey, page, limit)
+  if (arrayUniqueByKey.length > 0) {
+    return res.status(200).json({
+      status: 200,
+      statusValue: "SUCCESS",
+      message: "Event lists has been retrieved successfully.",
+      data: { data: allDevices, },
+      totalDataCount: arrayUniqueByKey.length,
+      totalPages: Math.ceil( (arrayUniqueByKey.length)/ limit),
+      currentPage: page,
+      // tempData: allDevices,
+    })
+  }
+  return res.status(400).json({
+    status: 400,
+    statusValue: "FAIL",
+    message: 'Data not found.',
+    data: {}
+  });
+  } catch (err) {
+    return res.status(500).json({
+      status: -1,
+      data: {
+        err: {
+          generatedTime: new Date(),
+          errMsg: err.stack,
+          msg: err.message,
+          type: err.name,
+        },
+      },
+    });
+  }
+};
+
+// get all devices by on the basis of userType
+const getAllDeviceId = async (req, res) => {
+  try {
+     // Search
+     var search = "";
+     if (req.query.search && req.query.search !== "undefined") {
+       search = req.query.search;
+    }
+     // Pagination
+    let { page, limit } = req.query;
+    if (!page || page === "undefined") {
+       page = 1;
+    }
+    if (!limit || limit === "undefined" || parseInt(limit) === 0) {
+       limit = 99999;
+    }
+
+    // get loggedin user details
+    const token = req.headers["authorization"].split(' ')[1];
+    const verified = await jwtr.verify(token, process.env.JWT_SECRET);
+    const loggedInUser = await User.findById({_id:verified.user});
+
+    // Declare blank obj
+    let filterObj = {};
+    // check user
+    if (!!loggedInUser && loggedInUser.userType === "User") {
+      filterObj = {
+        $match: {$and:[
+          {"deviceInfo.Hospital_Name":loggedInUser.hospitalName},
+          {deviceId: { $regex: ".*" + search + ".*", $options: "i" }}
+        ]}
+      }
+    } else {
+      filterObj = {
+        $match:{deviceId: { $regex: ".*" + search + ".*", $options: "i" }}
+      }
+    }
+    
+    
+    // check user
+  
+    const activeDevices = await statusModel.aggregate( [
+      {
+        $match: {
+          "message":"ACTIVE",
+        }
+      },
+      {
+        $lookup:
+          {
+            from: "registerdevices",
+            localField: "deviceId",
+            foreignField: "DeviceId",
+            as: "deviceInfo"
+          }
+      },
+      filterObj,
+      {
+        $project:{
+          "createdAt":0, "__v":0, "deviceInfo.__v":0,"deviceInfo.createdAt":0,
+          "deviceInfo.updatedAt":0, "deviceInfo.Status":0,
+        }
+      },
+      {
+        $sort: { updatedAt:-1 },
+      },
+    ]);
+   const inactiveDevices = await statusModel.aggregate( [
+    {
+      $match: {
+        "message":"INACTIVE",
+      }
+    },
+    {
+      $lookup:
+        {
+          from: "registerdevices",
+          localField: "deviceId",
+          foreignField: "DeviceId",
+          as: "deviceInfo"
+        }
+    },
+    filterObj,
+    {
+      $project:{
+        "createdAt":0, "__v":0, "deviceInfo.__v":0,"deviceInfo.createdAt":0,
+        "deviceInfo.updatedAt":0,"deviceInfo.Status":0,
+      }
+    },
+    {
+      $sort: { updatedAt:-1 },
+    },
+  ]);
+  var finalArr = [...activeDevices, ...inactiveDevices];
+  // remove duplicate records
+  var key = "deviceId";
+  let arrayUniqueByKey = [...new Map(finalArr.map(item => [item[key], item])).values()];
+
+  // let resArr1 = [];
+  // let resArr2 = [];
+  // filter data on the basis of userType
+ 
+  // console.log(loggedInUser)
+  // get data by user role
+  // console.log(333, resultArr)
+  // For pagination
+  const paginateArray =  (arrayUniqueByKey, page, limit) => {
+  const skip = arrayUniqueByKey.slice((page - 1) * limit, page * limit);
+  return skip;
+  };
 
   var allDevices = paginateArray(arrayUniqueByKey, page, limit)
   if (arrayUniqueByKey.length > 0) {

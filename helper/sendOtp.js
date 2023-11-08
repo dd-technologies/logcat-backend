@@ -167,24 +167,26 @@ const sendOtp = async function sendOtp(to, otp) {
                             <td style="font-family: sans-serif; font-size: 14px; vertical-align: top;" valign="top">
                               <p
                                 style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; margin-bottom: 15px;">
-                               <img src="https://logcat-bucket23.s3.ap-south-1.amazonaws.com/lgnewsmall.png?response-content-disposition=inline&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEFIaCmFwLXNvdXRoLTEiRjBEAiA%2B%2BGjTJq8KdMxj9VcgDurAEdQddY5fibcH3cHSaZLbBgIgIN8N9uPpBHc8Qy7MMiGS4nEugRtZkBlMi8suEw51UdQq7QIIi%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARAAGgw0NjE0MzQyNDAwNDQiDBPoB9fKWsHsBFz6%2FCrBArTYBw4iu%2B0mtj353ar25c1RVnSN5RQEhTJTGmwPju5TKFGa908XOIRN56YSG6EXQDJx4SzdPxGzXm4Vi5TvZo%2FlrPYCeHGv0%2FzJe75mp1mACYGXsm1XkR4ri0EM2kS0sS%2BGl2Ef5MFNb%2FM%2BLce5BxlgPsXplxua0m2kFMsQPrfkQevIi7IlEMfV3Ytr1zUfFCmIHDhWhYnOrCOmQgwTgd1JyUNGFmwskGM6WxRTC8lv4%2FSLjRXTYEMU5hxXpf3nMx0UdNoMgsZubQTk1zgiFplpaBu9Ny0fGF%2BlX8oNcd2OPWAGdcRZarZm46fVvl3TuK4zMcwhc3p8B0np4Ft2lyqEOXO1Ed7suGjcg4ZxT8HaPppayi3SERX2ulfDhnZbjS3C16bMBOAS4ih1FkpZUmQKG1N2h9KolQ1bNBq8%2FfVxFzCt56KqBjq0AoJy%2FsIFZiD8nvsxhydI4NFYZPOKJNbCxdmAoNWoiFnER9FAKcbT8vlWknsPZIQ%2BRbrrR1er2zgtQHDP%2BGKY2dHaQIhF4HVkmPkXEXrW%2B5PjpUcS%2Bpps2jPQqVP8nqA1c%2FFRuQQeP7ymrcaU7W9sCQ5d43BSn7dj3h5LkDGr0wMpused1eCP8AcDtX%2FYcXHw5XU0THrL8KP0S6Wi9odSeHsHZAO9tG2%2BZpVSEB4rthreBcuVmUrxRuycfi0AQ5raBe3NcIsWAPsVpf%2BRS9Z0aN7o12jTE%2BHWvYxZ4l4DtsINjG8G%2F1kL3I%2FDNOEPsk3qgvwo52cktKEnLbGyY3Yug8f8SvMMp8I9v2UUQDDLj1Hd9uxy9f6sDvn67NyzTnAyobkX1ScyA77tdd2cu7l1I0GE29UR&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20231106T094206Z&X-Amz-SignedHeaders=host&X-Amz-Expires=300&X-Amz-Credential=ASIAWW347XQWABKJJEPN%2F20231106%2Fap-south-1%2Fs3%2Faws4_request&X-Amz-Signature=5b24a0acc85e9e3b6e10152d49862190096018c9637e25117ee0c24d6618ea10" style='width: 2rem;'>
+                               <img src="https://i.ibb.co/xfngMWf/lgnewsmall.png" style='width: 2rem;'>
                               </p>
                               <h2>Hello From AgVa Team!</h2>  
                               <h5
                                 style="font-family: sans-serif; font-size: 14px;  margin: 0; margin-bottom: 15px;">
-                                Hii, ${to}</h5>
-                              <p
+                                Hi, ${to}</h5>
+                              <h5
                                 style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; margin-bottom: 15px;">
-                                We hope you're having a lovely day.</p>
-                              <p
+                                We hope you're having a lovely day.</h5>
+                              <h5
                                 style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; margin-bottom: 15px;">
                                 Thank you for choosing AgVa Healthcare. Use the following OTP to complete your verification email procedures. OTP is valid for 5 minutes .
                                 <br>
                               <h2 style="background: #00466a;margin: 0 auto;width: max-content;padding: 0 10px;color: #fff;border-radius: 4px;">
                                 ${otp}</h2>
                                 <br>
-                                cf You,
-                              </p>
+                                <h5
+                                style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; margin-bottom: 15px;">
+                                Thank You,</h5>
+                              </h5>
                               <table role="presentation" border="0" cellpadding="0" cellspacing="0" class="btn btn-primary"
                                 style="border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; box-sizing: border-box; width: 100%;"
                                 width="100%">
@@ -202,15 +204,15 @@ const sendOtp = async function sendOtp(to, otp) {
                                   </tr>
                                 </tbody>
                               </table>
-                              <p
+                              <h5
                                 style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; margin-bottom: 15px;">
-                                Good luck! Hope it works.</p>
+                                Good luck! Hope it works.</h5>
                                 <hr>
-                                <p
+                                <h5
                                 style="display: flex;align-items: center; justify-content: center; font-family: sans-serif; font-size: 10px; font-weight: normal; margin: 0; margin: 15px 0px;text-align: center;">
-                                <img src="https://logcat-bucket23.s3.ap-south-1.amazonaws.com/logoname.png?response-content-disposition=inline&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEFIaCmFwLXNvdXRoLTEiRjBEAiA%2B%2BGjTJq8KdMxj9VcgDurAEdQddY5fibcH3cHSaZLbBgIgIN8N9uPpBHc8Qy7MMiGS4nEugRtZkBlMi8suEw51UdQq7QIIi%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARAAGgw0NjE0MzQyNDAwNDQiDBPoB9fKWsHsBFz6%2FCrBArTYBw4iu%2B0mtj353ar25c1RVnSN5RQEhTJTGmwPju5TKFGa908XOIRN56YSG6EXQDJx4SzdPxGzXm4Vi5TvZo%2FlrPYCeHGv0%2FzJe75mp1mACYGXsm1XkR4ri0EM2kS0sS%2BGl2Ef5MFNb%2FM%2BLce5BxlgPsXplxua0m2kFMsQPrfkQevIi7IlEMfV3Ytr1zUfFCmIHDhWhYnOrCOmQgwTgd1JyUNGFmwskGM6WxRTC8lv4%2FSLjRXTYEMU5hxXpf3nMx0UdNoMgsZubQTk1zgiFplpaBu9Ny0fGF%2BlX8oNcd2OPWAGdcRZarZm46fVvl3TuK4zMcwhc3p8B0np4Ft2lyqEOXO1Ed7suGjcg4ZxT8HaPppayi3SERX2ulfDhnZbjS3C16bMBOAS4ih1FkpZUmQKG1N2h9KolQ1bNBq8%2FfVxFzCt56KqBjq0AoJy%2FsIFZiD8nvsxhydI4NFYZPOKJNbCxdmAoNWoiFnER9FAKcbT8vlWknsPZIQ%2BRbrrR1er2zgtQHDP%2BGKY2dHaQIhF4HVkmPkXEXrW%2B5PjpUcS%2Bpps2jPQqVP8nqA1c%2FFRuQQeP7ymrcaU7W9sCQ5d43BSn7dj3h5LkDGr0wMpused1eCP8AcDtX%2FYcXHw5XU0THrL8KP0S6Wi9odSeHsHZAO9tG2%2BZpVSEB4rthreBcuVmUrxRuycfi0AQ5raBe3NcIsWAPsVpf%2BRS9Z0aN7o12jTE%2BHWvYxZ4l4DtsINjG8G%2F1kL3I%2FDNOEPsk3qgvwo52cktKEnLbGyY3Yug8f8SvMMp8I9v2UUQDDLj1Hd9uxy9f6sDvn67NyzTnAyobkX1ScyA77tdd2cu7l1I0GE29UR&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20231106T094039Z&X-Amz-SignedHeaders=host&X-Amz-Expires=300&X-Amz-Credential=ASIAWW347XQWABKJJEPN%2F20231106%2Fap-south-1%2Fs3%2Faws4_request&X-Amz-Signature=b384b7d8d59961424f528f02e2e20df4f5e7ea4a860983148edd85f9c0c7d622" style="width: 10rem;"> </p>
-                                <p style="font-family: sans-serif; font-size: 10px; font-weight: normal; margin: 0; margin-bottom: 15px;text-align: center;">
-                                ©Copyright 2023 A-1 Sector 83 Agva Healthcare Pvt Ltd.</p>
+                                <img src="https://i.ibb.co/yBXyHN4/agva-healthcare-logo.png" style="width: 10rem;"> </h5>
+                                <h5 style="font-family: sans-serif; font-size: 10px; font-weight: normal; margin: 0; margin-bottom: 15px;text-align: center;">
+                                ©Copyright 2023 A-1 Sector 83 Agva Healthcare Pvt Ltd.</h5>
                             </td>
                           </tr>
                         </table>
@@ -407,7 +409,7 @@ const sendEmailLink = async function sendEmailLink(to, link) {
                                   <td style="font-family: sans-serif; font-size: 14px; vertical-align: top;" valign="top">
                                     <p
                                       style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; margin-bottom: 15px;">
-                                     <img src="https://logcat-bucket23.s3.ap-south-1.amazonaws.com/lgnewsmall.png?response-content-disposition=inline&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEFIaCmFwLXNvdXRoLTEiRjBEAiA%2B%2BGjTJq8KdMxj9VcgDurAEdQddY5fibcH3cHSaZLbBgIgIN8N9uPpBHc8Qy7MMiGS4nEugRtZkBlMi8suEw51UdQq7QIIi%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARAAGgw0NjE0MzQyNDAwNDQiDBPoB9fKWsHsBFz6%2FCrBArTYBw4iu%2B0mtj353ar25c1RVnSN5RQEhTJTGmwPju5TKFGa908XOIRN56YSG6EXQDJx4SzdPxGzXm4Vi5TvZo%2FlrPYCeHGv0%2FzJe75mp1mACYGXsm1XkR4ri0EM2kS0sS%2BGl2Ef5MFNb%2FM%2BLce5BxlgPsXplxua0m2kFMsQPrfkQevIi7IlEMfV3Ytr1zUfFCmIHDhWhYnOrCOmQgwTgd1JyUNGFmwskGM6WxRTC8lv4%2FSLjRXTYEMU5hxXpf3nMx0UdNoMgsZubQTk1zgiFplpaBu9Ny0fGF%2BlX8oNcd2OPWAGdcRZarZm46fVvl3TuK4zMcwhc3p8B0np4Ft2lyqEOXO1Ed7suGjcg4ZxT8HaPppayi3SERX2ulfDhnZbjS3C16bMBOAS4ih1FkpZUmQKG1N2h9KolQ1bNBq8%2FfVxFzCt56KqBjq0AoJy%2FsIFZiD8nvsxhydI4NFYZPOKJNbCxdmAoNWoiFnER9FAKcbT8vlWknsPZIQ%2BRbrrR1er2zgtQHDP%2BGKY2dHaQIhF4HVkmPkXEXrW%2B5PjpUcS%2Bpps2jPQqVP8nqA1c%2FFRuQQeP7ymrcaU7W9sCQ5d43BSn7dj3h5LkDGr0wMpused1eCP8AcDtX%2FYcXHw5XU0THrL8KP0S6Wi9odSeHsHZAO9tG2%2BZpVSEB4rthreBcuVmUrxRuycfi0AQ5raBe3NcIsWAPsVpf%2BRS9Z0aN7o12jTE%2BHWvYxZ4l4DtsINjG8G%2F1kL3I%2FDNOEPsk3qgvwo52cktKEnLbGyY3Yug8f8SvMMp8I9v2UUQDDLj1Hd9uxy9f6sDvn67NyzTnAyobkX1ScyA77tdd2cu7l1I0GE29UR&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20231106T094206Z&X-Amz-SignedHeaders=host&X-Amz-Expires=300&X-Amz-Credential=ASIAWW347XQWABKJJEPN%2F20231106%2Fap-south-1%2Fs3%2Faws4_request&X-Amz-Signature=5b24a0acc85e9e3b6e10152d49862190096018c9637e25117ee0c24d6618ea10" style='width: 2rem;'>
+                                     <img src="https://i.ibb.co/xfngMWf/lgnewsmall.png" style='width: 2rem;'>
                                     </p>
                                     <h2>Hello From AgVa Team!</h2>
                                     <p
@@ -449,7 +451,7 @@ const sendEmailLink = async function sendEmailLink(to, link) {
                                       <hr>
                                       <p
                                       style="display: flex;align-items: center; justify-content: center; font-family: sans-serif; font-size: 10px; font-weight: normal; margin: 0; margin: 15px 0px;text-align: center;">
-                                      <img src="https://logcat-bucket23.s3.ap-south-1.amazonaws.com/logoname.png?response-content-disposition=inline&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEFIaCmFwLXNvdXRoLTEiRjBEAiA%2B%2BGjTJq8KdMxj9VcgDurAEdQddY5fibcH3cHSaZLbBgIgIN8N9uPpBHc8Qy7MMiGS4nEugRtZkBlMi8suEw51UdQq7QIIi%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARAAGgw0NjE0MzQyNDAwNDQiDBPoB9fKWsHsBFz6%2FCrBArTYBw4iu%2B0mtj353ar25c1RVnSN5RQEhTJTGmwPju5TKFGa908XOIRN56YSG6EXQDJx4SzdPxGzXm4Vi5TvZo%2FlrPYCeHGv0%2FzJe75mp1mACYGXsm1XkR4ri0EM2kS0sS%2BGl2Ef5MFNb%2FM%2BLce5BxlgPsXplxua0m2kFMsQPrfkQevIi7IlEMfV3Ytr1zUfFCmIHDhWhYnOrCOmQgwTgd1JyUNGFmwskGM6WxRTC8lv4%2FSLjRXTYEMU5hxXpf3nMx0UdNoMgsZubQTk1zgiFplpaBu9Ny0fGF%2BlX8oNcd2OPWAGdcRZarZm46fVvl3TuK4zMcwhc3p8B0np4Ft2lyqEOXO1Ed7suGjcg4ZxT8HaPppayi3SERX2ulfDhnZbjS3C16bMBOAS4ih1FkpZUmQKG1N2h9KolQ1bNBq8%2FfVxFzCt56KqBjq0AoJy%2FsIFZiD8nvsxhydI4NFYZPOKJNbCxdmAoNWoiFnER9FAKcbT8vlWknsPZIQ%2BRbrrR1er2zgtQHDP%2BGKY2dHaQIhF4HVkmPkXEXrW%2B5PjpUcS%2Bpps2jPQqVP8nqA1c%2FFRuQQeP7ymrcaU7W9sCQ5d43BSn7dj3h5LkDGr0wMpused1eCP8AcDtX%2FYcXHw5XU0THrL8KP0S6Wi9odSeHsHZAO9tG2%2BZpVSEB4rthreBcuVmUrxRuycfi0AQ5raBe3NcIsWAPsVpf%2BRS9Z0aN7o12jTE%2BHWvYxZ4l4DtsINjG8G%2F1kL3I%2FDNOEPsk3qgvwo52cktKEnLbGyY3Yug8f8SvMMp8I9v2UUQDDLj1Hd9uxy9f6sDvn67NyzTnAyobkX1ScyA77tdd2cu7l1I0GE29UR&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20231106T094039Z&X-Amz-SignedHeaders=host&X-Amz-Expires=300&X-Amz-Credential=ASIAWW347XQWABKJJEPN%2F20231106%2Fap-south-1%2Fs3%2Faws4_request&X-Amz-Signature=b384b7d8d59961424f528f02e2e20df4f5e7ea4a860983148edd85f9c0c7d622" style="width: 10rem;"> </p>
+                                      <img src="https://i.ibb.co/yBXyHN4/agva-healthcare-logo.png" style="width: 10rem;"> </p>
                                       <p class='addressPara'
                                       >
                                       ©Copyright 2023 A-1 Sector 83 Agva Healthcare Pvt Ltd.</p>

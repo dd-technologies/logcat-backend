@@ -37,6 +37,8 @@ const saveTicket = async (req, res) => {
             waranty_status: Joi.string().required(),
             serialNumber: Joi.string().required(),
             tag: Joi.string().optional(),
+            address: Joi.string().optional(),
+            
         })
         let result = schema.validate(req.body);
         if (result.error) {
@@ -77,7 +79,7 @@ const saveTicket = async (req, res) => {
             waranty_status:req.body.waranty_status,
             serialNumber:req.body.serialNumber,
             tag:req.body.tag,
-            address:!!getAddress? getAddress.address : "",
+            address:!!(req.body.address) ? req.body.address : getAddress.address,
             hospital_name:!!getHospital? getHospital.Hospital_Name : "",
         });
         // console.log(11, ticketData)

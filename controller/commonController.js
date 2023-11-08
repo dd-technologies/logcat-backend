@@ -39,14 +39,38 @@ const sendVerificationEmail = async (req, res) => {
         };
         // console.log(req.body)
         const checkStatus = await emailVerificationModel.findOne({email:req.body.email})
+        const errors = validationResult(req);
         if(!!checkStatus && checkStatus.status == "Verified") {
-            return res.status(400).json({
-                statusCode: 400,
-                statusValue: "FAIL",
-                message: "Already verified.",
-                data:checkStatus.status
-            });
+          return res.status(400).json({
+            statusCode: 400,
+            statusValue:"FAIL",
+            message:"You have entered wrong credentials. Please enter valid credentials",
+            data: {
+              err: {
+                generatedTime: new Date(),
+                errMsg: errors
+                  .array()
+                  .map((err) => {
+                    return `${err.msg}: ${err.param}`;
+                  })
+                  .join(' | '),
+                msg: 'Already Verified',
+                type: 'ValidationError',
+                statusCode:400,
+              },
+            },
+          });
         }
+
+
+        // if(!!checkStatus && checkStatus.status == "Verified") {
+        //     return res.status(400).json({
+        //         statusCode: 400,
+        //         statusValue: "FAIL",
+        //         message: "Already verified.",
+        //         data:checkStatus.status
+        //     });
+        // }
         var otp = Math.floor(1000 + Math.random() * 9000);
         const saveOtp = await emailVerificationModel.findOneAndUpdate({
             email:req.body.email
@@ -102,12 +126,26 @@ const verifyOtp = async (req, res) => {
         })
       }
       const checkOtp = await emailVerificationModel.findOne({ otp: req.body.otp });
+      const errors = validationResult(req);
       if (!checkOtp) {
         return res.status(400).json({
           statusCode: 400,
-          statusValue: "FAIL",
-          message: "You have entered wrong otp",
-        })
+          statusValue:"FAIL",
+          message:"You have entered wrong otp. Please enter valid OTP",
+          data: {
+            err: {
+              generatedTime: new Date(),
+              errMsg: errors
+                .array()
+                .map((err) => {
+                  return `${err.msg}: ${err.param}`;})
+                  .join(' | '),
+              msg: 'Wrong OTP',
+              type: 'ValidationError',
+              statusCode:400,
+            },
+          },
+        });
       }
       await emailVerificationModel.findOneAndUpdate({otp:req.body.otp},{status:"Verified"})
       res.status(200).json({

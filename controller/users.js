@@ -17,6 +17,7 @@ const sendInBlueEmail = require('../helper/sendInBlueEmail.js');
 const errorHandler = require('../middleware/errorHandler.js');
 const sendOtp = require('../helper/sendOtp');
 const activityModel = require('../model/activityModel');
+const registeredHospitalModel = require('../model/registeredHospitalModel.js');
 
 /**
  * api      POST @/api/logger/register
@@ -48,6 +49,15 @@ const registerUser = async (req, res) => {
         statusValue: "FAIL",
         message:
           "The email is already in use. Please try to login using the email address or sign up with a different email address. ",
+      });
+    }
+    // check hospital name
+    const checkHospital = await registeredHospitalModel.findOne({Hospital_Name:req.body.hospitalName});
+    if (!checkHospital) {
+      return res.status(400).json({
+        statusCode: 400,
+        statusValue: "FAIL",
+        message: "Error! Wrong hospital name.",
       });
     }
     const salt = await bcrypt.genSalt();
@@ -739,7 +749,7 @@ const getAllUsers = async (req, res) => {
  * @desc - get all user
  * @api - /api/logger/users-list
  * @returns json data
- */
+*/
 const getServiceEngList = async (req, res) => {
   try {
     // Pagination
@@ -800,7 +810,7 @@ const getServiceEngList = async (req, res) => {
 const changeUserType = async (req, res) => {
   try {
     const schema = Joi.object({
-      userType: Joi.string().valid('Admin', 'User', 'Dispatch', 'Production', 'Support', 'Service-Engineer').required()
+      userType: Joi.string().valid('Admin', 'User', 'Dispatch', 'Production', 'Support', 'Service-Engineer','Nurse').required()
     })
     let result = schema.validate(req.body);
     if (result.error) {

@@ -29,6 +29,8 @@ const createDevice = async (req, res) => {
       Doctor_Name: Joi.string().required(),
       IMEI_NO: Joi.string().required(),
       Bio_Med: Joi.string().required(),
+      Alias_Name: Joi.string().required(),
+
     })
     let result = schema.validate(req.body);
     
@@ -48,19 +50,27 @@ const createDevice = async (req, res) => {
     
 
     // give alias name of deviceId
-    const Alias_Str = "AgPr";
-    const ranNum = Math.floor(1000 + Math.random() * 9000);
-    let Alias_Name = `${Alias_Str}-${ranNum}`
-    // check aliasname
-    const checkAlias = await Device.findOne({Alias_Name:Alias_Name})
-    if (checkAlias) {
-      Alias_Name = `${Alias_Str}-${ranNum}`
+    // const Alias_Str = "AgPr";
+    // const ranNum = Math.floor(1000 + Math.random() * 9000);
+    // let Alias_Name = `${Alias_Str}-${ranNum}`
+    // // check aliasname
+    // const checkAlias = await Device.findOne({Alias_Name:Alias_Name})
+    // if (checkAlias) {
+    //   Alias_Name = `${Alias_Str}-${ranNum}`
+    // }
+    const checkHospital = await registeredHospitalModel.findOne({Hospital_Name:req.body.Hospital_Name});
+    if (!checkHospital) {
+      return res.status(400).json({
+        statusCode: 400,
+        statusValue: "FAIL",
+        message: "Error! Wrong hospital name.",
+      });
     }
     const deviceData = await Device.findOneAndUpdate(
       { DeviceId: req.body.DeviceId },
       {
         DeviceId:req.body.DeviceId,
-        Alias_Name:Alias_Name,
+        Alias_Name:req.body.Alias_Name,
         Department_Name:req.body.Department_Name,
         Hospital_Name:req.body.Hospital_Name,
         Ward_No:req.body.Ward_No,
@@ -104,6 +114,7 @@ const updateDevice = async (req, res) => {
       Doctor_Name: Joi.string().required(),
       IMEI_NO: Joi.string().required(),
       Bio_Med: Joi.string().required(),
+      Alias_Name: Joi.string().required(),
     })
     let result = schema.validate(req.body);
     if (result.error) {
@@ -113,6 +124,17 @@ const updateDevice = async (req, res) => {
         message: result.error.details[0].message,
       })
     }
+    
+    // check hospital
+    const checkHospital = await registeredHospitalModel.findOne({Hospital_Name:req.body.Hospital_Name});
+    if (!checkHospital) {
+      return res.status(400).json({
+        statusCode: 400,
+        statusValue: "FAIL",
+        message: "Error! Wrong hospital name.",
+      });
+    }
+
     const deviceData = await Device.findOneAndUpdate(
       { DeviceId: req.params.DeviceId },
       req.body,
@@ -817,6 +839,7 @@ const getDispatchDataById = async (req, res) => {
 let redisClient = require("../config/redisInit");
 const activityModel = require('../model/activityModel');
 const productionModel = require('../model/productionModel');
+const registeredHospitalModel = require('../model/registeredHospitalModel');
 
 const JWTR = require("jwt-redis").default;
 const jwtr = new JWTR(redisClient);

@@ -2,84 +2,38 @@ const mongoose = require('mongoose')
 const Schema = mongoose.Schema;
 
 const patientSchema = mongoose.Schema({
-    userId: {
-        type: Schema.Types.ObjectId,
-        ref: "User"
-    },
-    DeviceId: { 
+    UHID: {
         type: String,
-        default: ""
+        required: true,
     },
-    patient_name: { 
+    age: {
         type: String,
-        required:true,
+        required: true,
+    },
+    weight: {
+        type: String,
+        required: true,
+    },
+    height: {
+        type: String,
+        required: true,
+    },
+    patientName : {
+        type: String,
+        required: true,
         default:""
     },
-    drug_info: { 
+    dosageProvided: {
         type: String,
-        required:true,
-        default:""
+        default: "",
     },
-    notification: { 
-        type: String,
-        required:true,
-        default:""
-    },
-    ward_inspection_record: { 
-        type: String,
-        required:true,
-        default:""
-    },
-    patient_logs: { 
-        type: String,
-        required:true,
-        default:""
-    },
-    bed_no: { 
-        type: String,
-        required:true,
-        default:""
-    },
-    ward_no: { 
-        type: String,
-        required:true,
-        default:""
-    },
-    vti: { 
-        type: String,
-        required:true,
-        default:""
-    },
-    spo2: { 
-        type: String,
-        required:true,
-        default:""
-    },
-    pr: { 
-        type: String,
-        required:true,
-        default:""
-    },
-    rr: { 
-        type: String,
-        required:true,
-        default:""
-    },
-    mvi: { 
-        type: String,
-        required:true,
-        default:""
-    },
-    peep: { 
-        type: String,
-        required:true,
-        default:""
-    },
-    pip: { 
-        type: String,
-        required:true,
-        default:""
-    },
+    medicalDiagnosis: [
+        {
+           name: { type: String, default: "" },
+           date: { type: String, default: "" },
+
+        }
+    ],
 },
     { timestamps: true })
 
