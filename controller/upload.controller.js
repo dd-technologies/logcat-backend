@@ -10,6 +10,8 @@ const s3BucketProdModel = require('../model/s3BucketProductionModel');
 const s3BucketInsModel = require('../model/s3BucketInstallationModel');
 const s33 = new AWS.S3();
 const {sendOtp, sendEmailLink} = require('../helper/sendOtp');
+const s3PatientFileModel = require('../model/s3PatientFileModel');
+const patientModel = require('../model/patientModel');
 
 exports.uploadSingle = async (req, res) => {
     // req.file contains a file object
@@ -62,9 +64,28 @@ exports.uploadInstallationReport = async (req, res) => {
 }
   
 
+// Upload patient file for patient module
+exports.uploadPatientFile = async (req, res) => {
+    // req.file contains a file object
+    res.json(req.file);
+  //   console.log(req.file.fieldname, req.params.deviceId)  
+  const newObj = {
+        "deviceId":req.params.deviceId,
+        "UHID":req.params.UHID,
+        ...req.file,
+    }
+    
+    const saveDoc = new s3PatientFileModel(newObj);
+    saveFile = saveDoc.save();
+    const dd = await patientModel.findOneAndUpdate({UHID:req.params.UHID},{
+        location:req.file.location,
+        key:req.file.key,
+    });
+}
+
+
 exports.getUploadedS3file = async (req, res) => {
     try {
-        
         const getDoc = await s3BucketModel.find({},
             {__v:0, createdAt:0, updatedAt:0,versionId:0,etag:0,metadata:0,serverSideEncryption:0,storageClass:0,contentEncoding:0}
         );
@@ -245,6 +266,39 @@ exports.getProductionFile = async (req, res) => {
             }
         })
     }
+}
+
+
+exports.deletePatientFile = async (req, res) => {
+    const key = req.params.key;
+    AWS.config.update({
+        // accessKeyId: 'AKIAUFKMQ2DN5UYCHZ2L',
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+        region: process.env.AWS_REGION // Replace with your desired AWS region
+    });
+
+    const paramsObj = {
+        Bucket: process.env.AWS_BUCKET,
+        Key: key, // Replace with the actual object key
+    };
+    await patientModel.findOneAndUpdate({key:req.params.key},{location:"",key:""});
+    await s3PatientFileModel.findOneAndDelete({key:req.params.key});
+    s33.deleteObject(paramsObj, (err, data) => {
+        if (err) {
+            return res.status(400).json({
+                statusCode: 400,
+                statusValue:"FAIL",
+                message:`Error in deleting object.`,
+            }) 
+        }
+        return res.status(200).json({
+            statusCode: 200,
+            statusValue:"SUCCESS",
+            message:`Object deleted successfully`,
+            data:data,
+        });     
+    });
 }
 
 

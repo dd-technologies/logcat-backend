@@ -1,7 +1,11 @@
 const mongoose = require('mongoose')
-const Schema = mongoose.Schema;
+// const Schema = mongoose.Schema;
 
 const patientSchema = mongoose.Schema({
+    deviceId: {
+        type: String,
+        required: true,
+    },
     UHID: {
         type: String,
         required: true,
@@ -23,17 +27,30 @@ const patientSchema = mongoose.Schema({
         required: true,
         default:""
     },
+    hospitalName:{
+        type: String,
+        default: ""
+    },
     dosageProvided: {
         type: String,
         default: "",
     },
     medicalDiagnosis: [
         {
-           name: { type: String, default: "" },
-           date: { type: String, default: "" },
-
-        }
+            medicine: { type: String, default: "" },
+            procedure: { type: String, default: "" },
+            others: { type: String, default: "" },
+            date: { type: Date, default: Date.now }
+        },
     ],
+    location:{
+        type: String,
+        default: "",
+    },
+    key:{
+        type: String,
+        default: "",
+    },
 },
     { timestamps: true })
 

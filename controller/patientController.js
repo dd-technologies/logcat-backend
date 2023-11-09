@@ -8,13 +8,11 @@ const patientModel = require('../model/patientModel');
  */
 const saveUhid = async (req, res) => {
   try {
-    const patientData = await patientModel.findOneAndUpdate({UHID:req.body.UHID},{
-      UHID:req.body.UHID,
-      age:req.body.age,
-      weight:req.body.weight,
-      height:req.body.height,
-    },{ upsert: true, new: true });
-  
+    const patientData = await patientModel.findOneAndUpdate(
+      {UHID:req.body.UHID},
+      req.body,
+      { upsert: true, new: true }
+    );
     if (!patientData) {
       return res.status(400).json({
         statusCode: 400,
@@ -40,6 +38,93 @@ const saveUhid = async (req, res) => {
     })
   }
 };
+
+
+/**
+ * api      POST @/patient/save-uhid-details
+ * desc     @saveUhid for publickly access
+ */
+const saveDiagnose = async (req, res) => {
+  try {
+    const diagnoseData = await patientModel.findOne({UHID:req.params.UHID});
+    const arr1 = diagnoseData.medicalDiagnosis;
+    const arr2 = [req.body];
+    const finalArr = [...arr1,...arr2];
+    // console.log(finalArr);
+    const patientData = await patientModel.findOneAndUpdate(
+      {UHID:req.params.UHID},
+      {
+        medicalDiagnosis:finalArr
+      },
+      { upsert: true }
+    );
+  
+    if (!diagnoseData) {
+      return res.status(400).json({
+        statusCode: 400,
+        statusValue: "FAIL",
+        message: "Data not added."
+      });
+    }
+    res.status(200).json({
+      statusCode: 201,
+      statusValue: "SUCCESS",
+      message: "Data added successfully.",
+      // data: patientData
+    });
+  } catch (error) {
+    return res.status(500).json({
+      statusCode: 500,
+      statusValue: "FAIL",
+      message: "Internal server error",
+      data: {
+        generatedTime: new Date(),
+        errMsg: err.stack,
+      }
+    })
+  }
+}
+
+
+/**
+ * api      POST @/patient/save-uhid-details
+ * desc     @saveUhid for publickly access
+ */
+const updatePatientById = async (req, res) => {
+  try {
+
+    // console.log(finalArr);
+    const patientData = await patientModel.findOneAndUpdate(
+      {UHID:req.params.UHID},
+      req.body,
+      { upsert: true }
+    );
+  
+    if (!patientData) {
+      return res.status(400).json({
+        statusCode: 400,
+        statusValue: "FAIL",
+        message: "Data not added."
+      });
+    }
+    res.status(200).json({
+      statusCode: 200,
+      statusValue: "SUCCESS",
+      message: "Data added successfully.",
+      // data: patientData
+    });
+  } catch (error) {
+    return res.status(500).json({
+      statusCode: 500,
+      statusValue: "FAIL",
+      message: "Internal server error",
+      data: {
+        generatedTime: new Date(),
+        errMsg: err.stack,
+      }
+    })
+  }
+}
 
 
 /**
@@ -157,5 +242,7 @@ module.exports = {
   saveUhid,
   getAllUhid,
   getAllUhids,
-  getDataByUhid
+  getDataByUhid,
+  saveDiagnose,
+  updatePatientById
 }
