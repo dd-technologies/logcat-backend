@@ -1,5 +1,10 @@
 const Joi = require('joi');
 const patientModel = require('../model/patientModel');
+const s3PatientFileModel = require('../model/s3PatientFileModel');
+let redisClient = require("../config/redisInit");
+const User = require('../model/users');
+const JWTR = require("jwt-redis").default;
+const jwtr = new JWTR(redisClient);
 
 
 /**
@@ -133,21 +138,35 @@ const updatePatientById = async (req, res) => {
  */
 const getAllUhid = async (req, res) => {
   try {
-    const getList = await patientModel.find({},{__v:0,_id:0,createdAt:0,updatedAt:0,})
+    // check userType
+    const token = req.headers["authorization"].split(' ')[1];
+    const verified = await jwtr.verify(token, process.env.JWT_SECRET);  
+    // for logger user activity
+    const loggedInUser = await User.findById({_id:verified.user});
+    // console.log(loggedInUser.userType)
+    if (loggedInUser.userType == "Admin"||"Nurse"||"Super-Admin") {
+      const getList = await patientModel.find({},{__v:0,createdAt:0,updatedAt:0,})
       .sort({ createdAt: -1 });
-    if (!getList) {
-      return res.status(400).json({
-        statusCode: 400,
-        statusValue: "FAIL",
-        message: "Data not found.",
-        data: []
+      
+      if (!getList) {
+        return res.status(400).json({
+          statusCode: 400,
+          statusValue: "FAIL",
+          message: "Data not found.",
+          data: []
+        })
+      }
+      return res.status(200).json({
+        statusCode: 200,
+        statusValue: "SUCCESS",
+        message: "Patient list get successfully.",
+        data: getList
       })
     }
-    return res.status(200).json({
-      statusCode: 200,
-      statusValue: "SUCCESS",
-      message: "Patient list get successfully.",
-      data: getList
+    return res.status(400).json({
+      statusCode: 400,
+      statusValue: "FAIL",
+      message: "You don't have permission",
     })
   } catch (err) {
     return res.status(500).json({
@@ -236,6 +255,82 @@ const getDataByUhid = async (req, res) => {
   }
 }  
 
+/**
+ * api      GET @/patient/get-diagnose/:UHID
+ * desc     @getDataByUhid for logger access only
+ */
+const getDiagnoseByUhid = async (req, res) => {
+  try {
+    const UHID = req.params.UHID;
+    const getData = await patientModel.findOne({UHID:UHID},{__v:0,});
+    
+    // check UHID data
+    if (!getData) {
+      return res.status(400).json({
+        statusCode: 400,
+        statusValue: "FAIL",
+        message: "Data not found.",
+        data:[]
+      })
+    }
+
+    return res.status(200).json({
+      statusCode: 200,
+      statusValue: "SUCCESS",
+      message: "Data get successfully.",
+      data:getData.medicalDiagnosis,
+    })
+
+  } catch (err) {
+    return res.status(500).json({
+      statusCode: 500,
+      statusValue: "FAIL",
+      message: "Internal server error",
+      data: {
+        generatedTime: new Date(),
+        errMsg: err.stack,
+      }
+    })
+  }
+}  
+
+
+/** 
+ * api      DELETE @/patient/delete-patient/:id
+ * desc     @deletePatientById for logger access only
+*/
+const deletePatientById = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const getPatient = await patientModel.findById({_id:id});
+    const deleteData = await patientModel.findByIdAndDelete({_id:id});
+    if(!!deleteData) {
+      await s3PatientFileModel.findOneAndDelete({UHID:getPatient.UHID});
+      return res.status(200).json({
+        statusCode: 200,
+        statusValue: "SUCCESS",
+        message: "Data deleted successfully!",
+      })
+    }
+    return res.status(400).json({
+      statusCode: 400,
+      statusValue: "FAIL",
+      message: "Error ! while deleting patient data."
+    })
+  }
+  catch (err) {
+    return res.status(500).json({
+      statusCode: 500,
+      statusValue: "FAIL",
+      message: "Internal server error",
+      data: {
+        generatedTime: new Date(),
+        errMsg: err.stack,
+      }
+    })
+  }
+}
+
 
 
 module.exports = {
@@ -244,5 +339,7 @@ module.exports = {
   getAllUhids,
   getDataByUhid,
   saveDiagnose,
-  updatePatientById
+  updatePatientById,
+  deletePatientById,
+  getDiagnoseByUhid
 }

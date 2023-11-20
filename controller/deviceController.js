@@ -133,7 +133,7 @@ const updateDevice = async (req, res) => {
         statusValue: "FAIL",
         message: "Error! Wrong hospital name.",
       });
-    }
+    }  
 
     const deviceData = await Device.findOneAndUpdate(
       { DeviceId: req.params.DeviceId },
@@ -147,6 +147,7 @@ const updateDevice = async (req, res) => {
       "statusValue": "SUCCESS",
       data: deviceData
     });
+    
   } catch (err) {
     return res.status(500).json({
       statusCode: 500,

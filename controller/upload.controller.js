@@ -277,7 +277,6 @@ exports.deletePatientFile = async (req, res) => {
         secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
         region: process.env.AWS_REGION // Replace with your desired AWS region
     });
-
     const paramsObj = {
         Bucket: process.env.AWS_BUCKET,
         Key: key, // Replace with the actual object key

@@ -55,7 +55,7 @@ const isAuth = async (req, res, next) => {
     }
 
     req.user = verified.user;
-    console.log("req user", req.user);
+    // console.log("req user", req.user);
     req.jti = verified.jti;
 
     // proceed after authentication
@@ -80,7 +80,7 @@ const isSuperAdmin = async (req, res, next) => {
   try {
     const user = await User.findById(req.user);
     // console.log("Details of user", user);
-    console.log(user.isSuperAdmin);
+    // console.log(user.isSuperAdmin);
 
     if (!user.isSuperAdmin) {
       return res.status(403).json({
@@ -119,6 +119,78 @@ const isAdmin = async (req, res, next) => {
     // console.log("Details of user", user);
       //  console.log("Admin details :", user);
     if (user.userType !== "Admin") {
+      return res.status(403).json({
+        status: 0,
+        data: {
+          err: {
+            generatedTime: new Date(),
+            errMsg: "You dont have permission to access this.",
+            msg: "You dont have permission to access this.",
+            type: "AuthenticationError",
+          },
+        },
+      });
+    }
+    next();
+  } catch (err) {
+    res.status(500).json({
+      status: -1,
+      data: {
+        err: {
+          generatedTime: new Date(),
+          errMsg: err.message,
+          msg: "Internal Server Error",
+          type: err.name,
+        },
+      },
+    });
+  }
+
+  // console.log("request created",req.user)
+};
+
+const isNurse = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user);
+    // console.log("Details of user", user);
+      //  console.log("Admin details :", user);
+    if (user.userType !== "Nurse") {
+      return res.status(403).json({
+        status: 0,
+        data: {
+          err: {
+            generatedTime: new Date(),
+            errMsg: "You dont have permission to access this.",
+            msg: "You dont have permission to access this.",
+            type: "AuthenticationError",
+          },
+        },
+      });
+    }
+    next();
+  } catch (err) {
+    res.status(500).json({
+      status: -1,
+      data: {
+        err: {
+          generatedTime: new Date(),
+          errMsg: err.message,
+          msg: "Internal Server Error",
+          type: err.name,
+        },
+      },
+    });
+  }
+
+  // console.log("request created",req.user)
+};
+
+const isProduction = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user);
+    // console.log("Details of user", user);
+      //  console.log("Admin details :", user);
+    if (user.userType !== "Production") {
       return res.status(403).json({
         status: 0,
         data: {
@@ -188,4 +260,4 @@ const isDispatch = async (req, res, next) => {
 
 
 
-module.exports = { isAuth, isSuperAdmin, isAdmin, isDispatch };
+module.exports = { isAuth, isSuperAdmin, isAdmin, isDispatch, isNurse, isProduction, };
