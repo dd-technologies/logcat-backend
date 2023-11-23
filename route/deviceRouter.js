@@ -15,6 +15,7 @@ router.put('/update/:DeviceId', deviceController.updateDevice);
 router.get('/getdevice/:DeviceId', deviceController.getDeviceById);
 router.get('/get-details/:DeviceId', deviceController.getDeviceById);
 router.delete('/delete-byid/:DeviceId', deviceController.deleteSingleDevice);
+router.get('/get-devices-by-hospital/:hospital_name', deviceController.getDevicesByHospital);
 
 // router.post('/register', deviceController.registerNewDevice);
 router.get('/registered_devices', isAuth, deviceController.getAllDevices);

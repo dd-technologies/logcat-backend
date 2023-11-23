@@ -258,6 +258,117 @@ const isDispatch = async (req, res, next) => {
   // console.log("request created",req.user)
 };
 
+/** 
+ * for Support User role
+*/
+const isSupport = async (req, res, next) => {
+  try {
+     const user = await User.findById(req.user);
+    //  console.log(user);
+    // check userType
+    if (user.userType !== "Support") {
+      return res.status(403).json({
+        status: 0,
+        data: {
+          err: {
+            generatedTime: new Date(),
+            errMsg: "You dont have permission to access this.",
+            msg: "You dont have permission to access this.",
+            type: "AuthenticationError",
+          },
+        },
+      })
+    }
+    // call to next fun
+    next();
+  } catch (err) {
+    res.status(500).json({
+      status: -1,
+      data: {
+        err: {
+          generatedTime: new Date(),
+          errMsg: err.message,
+          msg: "Internal Server Error",
+          type: err.name,
+        },
+      },
+    });
+  }
+}
+
+/**
+ * for Service-Engineer role
+ */
+const isServiceEng = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user);
+    // console.log(12,user);
+    // check userType
+    if (user.userType !== "Service-Engineer") {
+      return res.status(403).json({
+        status: 0,
+        data: {
+          err: {
+            generatedTime: new Date(),
+            errMsg: "You dont have permission to access this.",
+            msg: "You dont have permission to access this.",
+            type: "AuthenticationError",
+          },
+        },
+      })
+    }
+    next();
+  } catch (err) {
+    res.status(500).json({
+      status: -1,
+      data: {
+        err: {
+          generatedTime: new Date(),
+          errMsg: err.message,
+          msg: "Internal Server Error",
+          type: err.name,
+        },
+      },
+    });
+  }
+}
+
+/**
+ * for User role
+ */
+const isUser = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user);
+    // console.log(user);
+    // check userType
+    if (user.userType !== "User") {
+      return res.status(403).json({
+        status:0,
+        data:{
+          err: {
+            generatedTime: new Date(),
+            errMsg: "You dont have permission to access this.",
+            msg: "You dont have permission to access this.",
+            type: "AuthenticationError",
+          },
+        },
+      })
+    }
+    next();
+  } catch (err) {
+    res.status(500).json({
+      status: -1,
+      data: {
+        err: {
+          generatedTime: new Date(),
+          errMsg: err.message,
+          msg: "Internal Server Error",
+          type: err.name,
+        },
+      },
+    })
+  }
+}
 
 
-module.exports = { isAuth, isSuperAdmin, isAdmin, isDispatch, isNurse, isProduction, };
+module.exports = { isAuth, isSuperAdmin, isAdmin, isDispatch, isNurse, isProduction, isSupport, isServiceEng, isUser};

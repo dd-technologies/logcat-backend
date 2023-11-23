@@ -3,6 +3,7 @@ const patientModel = require('../model/patientModel');
 const s3PatientFileModel = require('../model/s3PatientFileModel');
 let redisClient = require("../config/redisInit");
 const User = require('../model/users');
+const RegisterDevice = require('../model/RegisterDevice');
 const JWTR = require("jwt-redis").default;
 const jwtr = new JWTR(redisClient);
 
@@ -13,9 +14,14 @@ const jwtr = new JWTR(redisClient);
  */
 const saveUhid = async (req, res) => {
   try {
+    let bodyObj = {};
+    const deviceDetails = await RegisterDevice.findOne({DeviceId:req.body.deviceId});
+    // console.log(deviceDetails)
+    bodyObj = {...req.body, alias_name:!!deviceDetails ? deviceDetails.Alias_Name : ""}
+    // console.log(bodyObj)
     const patientData = await patientModel.findOneAndUpdate(
       {UHID:req.body.UHID},
-      req.body,
+      bodyObj,
       { upsert: true, new: true }
     );
     if (!patientData) {
@@ -55,7 +61,7 @@ const saveDiagnose = async (req, res) => {
     const arr1 = diagnoseData.medicalDiagnosis;
     const arr2 = [req.body];
     const finalArr = [...arr1,...arr2];
-    // console.log(finalArr);
+    
     const patientData = await patientModel.findOneAndUpdate(
       {UHID:req.params.UHID},
       {
@@ -97,8 +103,6 @@ const saveDiagnose = async (req, res) => {
  */
 const updatePatientById = async (req, res) => {
   try {
-
-    // console.log(finalArr);
     const patientData = await patientModel.findOneAndUpdate(
       {UHID:req.params.UHID},
       req.body,
@@ -141,11 +145,12 @@ const getAllUhid = async (req, res) => {
     // check userType
     const token = req.headers["authorization"].split(' ')[1];
     const verified = await jwtr.verify(token, process.env.JWT_SECRET);  
+    
     // for logger user activity
     const loggedInUser = await User.findById({_id:verified.user});
-    // console.log(loggedInUser.userType)
+    
     if (loggedInUser.userType == "Admin"||"Nurse"||"Super-Admin") {
-      const getList = await patientModel.find({},{__v:0,createdAt:0,updatedAt:0,})
+      const getList = await patientModel.find({patientName:{$ne:""}},{__v:0,createdAt:0,updatedAt:0,})
       .sort({ createdAt: -1 });
       
       if (!getList) {
@@ -273,7 +278,7 @@ const getDiagnoseByUhid = async (req, res) => {
         data:[]
       })
     }
-
+    
     return res.status(200).json({
       statusCode: 200,
       statusValue: "SUCCESS",

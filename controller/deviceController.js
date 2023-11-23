@@ -269,6 +269,49 @@ const getDeviceById = async (req, res) => {
 }
 
 /**
+ * api      GET @/get-devices-by-hospital/:hospital
+ * desc     @get single device by id for logger access only
+ */
+const getDevicesByHospital = async (req, res) => {
+  try {
+    const getRegDevices = await Device.find({Hospital_Name:req.params.hospital_name});
+    const deviceIds = getRegDevices.map((item) => {
+      return item.DeviceId
+    })
+    const getRecord = await statusModel.find({"deviceId":{$in:deviceIds}}).sort({"createdAt":1})
+    // console.log(getRecord)
+    let arrayUniqueByKey = [...new Map(getRecord.map(item => [item["deviceId"], item])).values()];
+    
+    if (arrayUniqueByKey.length<1) {
+      return res.status(404).json({
+        statusCode: 400,
+        statusValue: "FAIL",
+        message: "Data not found with this given hospital name.",
+        data: [],
+      })
+    }
+
+    return res.status(200).json({
+      statusCode: 200,
+      statusValue: "SUCCESS",
+      message: "Device get successfully!",
+      data: arrayUniqueByKey
+    });
+  } catch (err) {
+    res.status(500).json({
+      statusCode: 500,
+      statusValue: "FAIL",
+      message: "Internal server error",
+      data: {
+        generatedTime: new Date(),
+        errMsg: err.stack,
+      }
+    })
+  }
+}
+
+
+/**
  * api      GET @/devices
  * desc     @getAllDevices for logger access only
  */
@@ -1562,4 +1605,5 @@ module.exports = {
   getDevicesNeedingAttention,
   getDispatchData,
   getDispatchDataById,
+  getDevicesByHospital
 }

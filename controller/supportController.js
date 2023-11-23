@@ -35,7 +35,7 @@ const saveTicket = async (req, res) => {
             priority: Joi.string().valid('Critical', 'Medium'),
             details: Joi.string().required(),
             waranty_status: Joi.string().required(),
-            serialNumber: Joi.string().required(),
+            serialNumber: Joi.string().allow("").optional(),
             tag: Joi.string().optional(),
             address: Joi.string().optional(),
             
@@ -77,7 +77,7 @@ const saveTicket = async (req, res) => {
             priority:req.body.priority,
             details:req.body.details,
             waranty_status:req.body.waranty_status,
-            serialNumber:req.body.serialNumber,
+            serialNumber:!!(req.body.serialNumber) ? req.body.serialNumber : "",
             tag:req.body.tag,
             address:!!(req.body.address) ? req.body.address : getAddress.address,
             hospital_name:!!getHospital? getHospital.Hospital_Name : "",

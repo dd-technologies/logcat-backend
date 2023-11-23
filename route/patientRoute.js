@@ -1,7 +1,7 @@
 // deviceRouter.js
 const express = require('express');
 const router = express.Router();
-const { isAuth, isNurse } = require("../middleware/authMiddleware.js");
+const { isAuth, isNurse, isProduction, isAdmin, isServiceEng } = require("../middleware/authMiddleware.js");
 const patientController = require('../controller/patientController.js');
 const upload = require('../helper/upload.helper');
 const uploadController = require('../controller/upload.controller');

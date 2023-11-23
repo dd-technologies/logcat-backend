@@ -193,12 +193,35 @@ const getProductionById = async (req, res) => {
 /*
 * @param {*} req 
 * @param {*} res 
-* api GET@/production/get-by-serialNumber/:serialNumber
+* api GET@/production/get-by-serialNumber/:serialNumber or deviceId
 */
 const getProductionBySrNo = async (req, res) => {
     try {
-        const data = await productionModel.findOne({serialNumber:req.params.serialNumber})
+        const data = await productionModel.findOne({
+            $or:[
+                {serialNumber:req.params.serialNumber},
+                {deviceId:req.params.serialNumber},
+            ]
+        })
         .select({ __v: 0, createdAt: 0, updatedAt: 0 })
+        let desiredObj = {};
+        const aboutData = await aboutDeviceModel.findOne({deviceId:data.deviceId});
+        desiredObj = {
+            "deviceId": data ? data.deviceId : "",
+            "purpose": data ? data.purpose : "",
+            "simNumber": data ? data.simNumber : "",
+            "productType": data ? data.productType : "",
+            "batchNumber": data ? data.batchNumber : "",
+            "serialNumber": data ? data.serialNumber : "",
+            "manufacturingDate": data ? data.manufacturingDate : "",
+            "dispatchDate": data ? data.dispatchDate : "",
+            "hospitalName": data ? data.hospitalName : "",
+            "dateOfWarranty": data ? data.dateOfWarranty : "",
+            "address": data ? data.address : "",
+            "hw_version": data ? data.hw_version : "",
+            "sw_version:": data ? data.sw_version:  "",
+            "concerned_p_contact":aboutData ? aboutData.phone_number : "",
+        }
         if (!data) {
             return res.status(404).json({
                 statusCode: 404,
@@ -211,7 +234,7 @@ const getProductionBySrNo = async (req, res) => {
             statusCode: 200,
             statusValue: "SUCCESS",
             message: "production data get successfully!",
-            data: data,
+            data: desiredObj,
         });
     } catch (err) {
         res.status(500).json({

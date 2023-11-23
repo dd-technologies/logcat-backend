@@ -35,6 +35,18 @@ const patientSchema = mongoose.Schema({
         type: String,
         default: "",
     },
+    ward_no: {
+        type: String,
+        default: "",
+    },
+    doctor_name: {
+        type: String,
+        default: "",
+    },
+    alias_name: {
+        type: String,
+        default: "",
+    },
     medicalDiagnosis: [
         {
             medicine: { type: String, default: "" },
