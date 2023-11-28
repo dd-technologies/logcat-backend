@@ -8,6 +8,8 @@ const hospitalController = require('../controller/hospitalController');
 
 router.post('/register-hospital', isAuth, hospitalController.saveHospital)
 router.get('/hospital-list/:State', hospitalController.getHospitalList);
+router.get('/get-bypincode/:Pincode', hospitalController.getHospitals);
+
 router.get('/hospital-list', hospitalController.getHospitalList);
 router.get('/get-byid/:id', hospitalController.getSingleHospital);
 router.put('/update-hospital', isAuth, hospitalController.updateHospital);

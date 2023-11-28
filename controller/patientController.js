@@ -32,7 +32,7 @@ const saveUhid = async (req, res) => {
       });
     }
     res.status(200).json({
-      statusCode: 201,
+      statusCode: 200,
       statusValue: "SUCCESS",
       message: "Data added successfully.",
       data: patientData

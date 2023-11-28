@@ -712,7 +712,7 @@ const addAboutDevice = async (req, res) => {
         concerned_person:req.body.concerned_person,
         batch_no:!!getProduction? getProduction.batchNumber : req.body.batch_no,
         date_of_manufacturing:!!getProduction? getProduction.manufacturingDate : req.body.date_of_manufacturing,
-        address:!!getProduction? getProduction.address : req.body.address,
+        address:req.body.address,
         date_of_dispatch:req.body.date_of_dispatch,
         hospital_name:!!getHospital? getHospital.Hospital_Name : req.body.hospital_name,
         phone_number:req.body.phone_number,
@@ -729,7 +729,16 @@ const addAboutDevice = async (req, res) => {
     );
     const checkData = await aboutDeviceModel.findOne({deviceId:req.body.deviceId});
     if(!!checkData) {
-      await productionModel.findOneAndUpdate({deviceId:checkData.deviceId},{hospitalName:checkData.hospital_name});
+      await productionModel.findOneAndUpdate(
+        {deviceId:checkData.deviceId},
+        {
+          hospitalName:checkData.hospital_name,
+          address:checkData.address,
+          dispatchDate:checkData.date_of_dispatch,
+          purpose:checkData.purpose,
+          dateOfWarranty:checkData.date_of_warranty,
+        }
+      );
       return res.status(201).json({
         statusCode: 201,
         statusValue: "SUCCESS",

@@ -20,6 +20,8 @@ const {
     changeUserType,
     getActivity,
     deleteSingleUser,
+    changeUserStatus,
+    getUserStatus
 } = require('../controller/users.js')
 
 const {
@@ -51,8 +53,11 @@ router.get('/auth/logout', isAuth, logoutUser)
 // Protected Route
 // router.get('/users', isAuth, profileCache(10), getUserByUserId)
 router.get('/users/:userId', isAuth, getUserProfileById);
+router.get('/user-status/:email', getUserStatus);
+
 router.get('/users-list', isAuth, getAllUsers);
 router.get('/service-eng-list', getServiceEngList);
+router.put('/change-user-status', changeUserStatus)
 
 router.put('/change-userType/:userId', isAuth, isAdmin, changeUserType);
 router.delete('/users/delete-byid/:id', isAuth, isAdmin, deleteSingleUser);

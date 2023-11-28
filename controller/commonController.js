@@ -127,6 +127,7 @@ const verifyOtp = async (req, res) => {
       }
       const checkOtp = await emailVerificationModel.findOne({ otp: req.body.otp });
       const errors = validationResult(req);
+      console.log(11,checkOtp)
       if (!checkOtp) {
         return res.status(400).json({
           statusCode: 400,
@@ -146,7 +147,9 @@ const verifyOtp = async (req, res) => {
             },
           },
         });
+        // console.log()
       }
+      
       await emailVerificationModel.findOneAndUpdate({otp:req.body.otp},{status:"Verified"})
       res.status(200).json({
         statusCode: 200,

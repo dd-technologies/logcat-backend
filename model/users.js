@@ -56,6 +56,12 @@ const userSchema = mongoose.Schema({
         type: String,
         required: [true, "State Name is required"],
     },
+    userStatus:{
+        type: String,
+        enum: ["Active", "Inactive", "On-leave"],
+        required:true,
+        default:"Active"
+    },
 }, {timestamps: true})
 
 const User = mongoose.model('User',userSchema)

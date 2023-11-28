@@ -30,7 +30,12 @@ const saveHospital = async (req, res) => {
                 message: result.error.details[0].message,
             })
         }
-        const checkHospital = await registeredHospitalModel.findOne({ Hospital_Name: req.body.Hospital_Name });
+        const checkHospital = await registeredHospitalModel.findOne({
+            $and:[
+                {Hospital_Name: req.body.Hospital_Name},
+                {Pincode:req.body.Pincode},
+            ]
+        });
         if (checkHospital) {
             return res.status(400).json({
                 statusCode: 400,
@@ -85,14 +90,7 @@ const updateHospital = async (req, res) => {
                 message: result.error.details[0].message,
             })
         }
-        const checkHospital = await registeredHospitalModel.findOne({ Hospital_Name: req.body.Hospital_Name });
-        if (checkHospital) {
-            return res.status(400).json({
-                statusCode: 400,
-                statusValue: "FAIL",
-                message: "Hospital already registered."
-            })
-        }
+        
         const updateDoc = await registeredHospitalModel.findByIdAndUpdate(
             { _id:req.body.id },
             { 
@@ -172,12 +170,11 @@ const deleteHospital = async (req, res) => {
     }
 }
 
-/**
- * 
- * @param {*} req 
- * @param {*} res 
- * api GET@/api/logger/logs/location/:deviceId/:project_code
- */
+
+/** 
+ * api      GET @/hospital/get-byid/:id
+ * desc     @getSingleHospital for logger access only
+*/
 const getHospitalList = async (req, res) => {
     try {
         if (!req.params.State) {
@@ -223,6 +220,39 @@ const getHospitalList = async (req, res) => {
     }
 }
 
+const getHospitals = async (req, res) => {
+    try {
+        const data = await registeredHospitalModel.find({Pincode:req.params.Pincode}, { __v: 0, createdAt: 0, updatedAt: 0 });
+        if (data.length == "") {
+            return res.status(404).json({
+                statusCode: 404,
+                statusValue: "FAIL",
+                message: "Data not found."
+            })
+        }
+        return res.status(200).json({
+            statusCode: 200,
+            statusValue: "SUCCESS",
+            message: "Hospital data get successfully.",
+            data: data
+        })
+    } catch (error) {
+        return res.status(500).json({
+            statusCode: 500,
+            statusValue: "FAIL",
+            message: "Internal server error",
+            data: {
+                generatedTime: new Date(),
+                errMsg: err.stack,
+            }
+        })
+    }
+}
+
+/** 
+ * api      GET @/hospital/get-byid/:id
+ * desc     @getSingleHospital for logger access only
+*/
 const getSingleHospital = async (req, res) => {
     try {
         const data = await registeredHospitalModel.findById(
@@ -338,4 +368,5 @@ module.exports = {
     getSingleHospital,
     updateHospital,
     deleteHospital,
+    getHospitals,
 }

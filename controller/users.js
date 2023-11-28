@@ -15,7 +15,7 @@ const User = require('../model/users');
 const sendEmail = require('../helper/sendEmail.js');
 const sendInBlueEmail = require('../helper/sendInBlueEmail.js');
 const errorHandler = require('../middleware/errorHandler.js');
-const sendOtp = require('../helper/sendOtp');
+const {sendOtp} = require('../helper/sendOtp');
 const activityModel = require('../model/activityModel');
 const registeredHospitalModel = require('../model/registeredHospitalModel.js');
 
@@ -192,6 +192,7 @@ const loginUser = async (req, res) => {
         image: isUserExist.image,
         userType:isUserExist.userType,
         isSuperAdmin: isUserExist.isSuperAdmin,
+        userStatus:isUserExist.userStatus
       },
     });
   } catch (err) {
@@ -342,7 +343,7 @@ const updateUserProfile = async (req, res) => {
 const resetForgetPassword = async (req, res) => {
   try {
     const schema = Joi.object({
-      email: Joi.string().email().required(),
+      email: Joi.string().required(),
     })
     let result = schema.validate(req.body);
     if (result.error) {
@@ -353,12 +354,26 @@ const resetForgetPassword = async (req, res) => {
       });
     };
     const checkUser = await Users.findOne({email:req.body.email});
+    const errors = validationResult(req);
     if (!checkUser) {
       return res.status(400).json({
         statusCode: 400,
-        statusValue: "FAIL",
-        message: "User not found with this emai id"
-      })
+        statusValue:"FAIL",
+        message:"User does not exixts",
+        data: {
+          err: {
+            generatedTime: new Date(),
+            errMsg: errors
+              .array()
+              .map((err) => {
+                return `${err.msg}: ${err.param}`;})
+                .join(' | '),
+            msg: 'User does not exixts',
+            type: 'ValidationError',
+            statusCode:400,
+          },
+        },
+      });
     }
     var otp = Math.floor(1000 + Math.random() * 9000);
     const saveOtp = await Users.findByIdAndUpdate(
@@ -389,6 +404,7 @@ const resetForgetPassword = async (req, res) => {
 
 const verifyOtp = async (req, res) => {
   try {
+    // console.log(req.body)
     const schema = Joi.object({
       otp: Joi.string().required(),
     })
@@ -400,19 +416,38 @@ const verifyOtp = async (req, res) => {
         message: result.error.details[0].message,
       })
     }
-    const checkOtp = await Users.findOne({ otp: req.body.otp });
-    if (!checkOtp) {
+    // console.log()
+    const checkOtp = await Users.find({ otp:req.body.otp });
+    // console.log(checkOtp)
+    const errors = validationResult(req);
+    // console.log(errors)
+    if (checkOtp.length<1) {
       return res.status(400).json({
         statusCode: 400,
-        statusValue: "FAIL",
-        message: "You have entered wrong otp",
+        statusValue:"FAIL",
+        message:"You have entered wrong otp. Please enter valid OTP",
+        data: {
+          err: {
+            generatedTime: new Date(),
+            errMsg: errors
+              .array()
+              .map((err) => {
+                return `${err.msg}: ${err.param}`;})
+                .join(' | '),
+            msg: 'Wrong OTP',
+            type: 'ValidationError',
+            statusCode:400,
+          },
+        },
+      });
+    } else {
+      res.status(200).json({
+        statusCode: 200,
+        statusValue: "SUCCESS",
+        message: "Otp verified successfully."
       })
     }
-    res.status(200).json({
-      statusCode: 200,
-      statusValue: "SUCCESS",
-      message: "Otp verified successfully."
-    })
+    
   } catch (err) {
     return res.status(500).json({
       statusCode: 500,
@@ -426,6 +461,12 @@ const verifyOtp = async (req, res) => {
   }
 }
 
+
+/**
+ * @desc - logger access only
+ * @api - /api/logger/auth/generate-newpassword
+ * @method - PUT
+ */
 const generateNewPassword = async (req, res) => {
   try {
     const schema = Joi.object({
@@ -474,6 +515,7 @@ const generateNewPassword = async (req, res) => {
   }
 };
 
+
 /**
  * @desc - logger access only
  * @api - /api/logger/logs/logout
@@ -508,6 +550,7 @@ const logoutUser = async (req, res) => {
     });
   }
 };
+
 
 /**
  * @desc - update your passwrd
@@ -575,6 +618,7 @@ const userPasswordChange = async (req, res) => {
   }
 }
 
+
 /**
  * @desc - get user profile by userId
  * @api - GET /api/logger/users/userId 
@@ -595,6 +639,44 @@ const getUserProfileById = async (req, res) => {
       statusCode: 200,
       statusValue:"SUCCESS",
       message:"Get user profile successfully!",
+      data:userData
+    });
+
+  } catch (err) {
+    return res.status(500).json({
+      statusCode: 500,
+      statusValue: "FAIL",
+      message:"Internal server error",
+      data: {
+        generatedTime: new Date(),
+        errMsg: err.stack,
+      }
+    })
+  }
+}
+
+
+/**
+ * @desc - get user status by email
+ * @api - GET /api/logger/user-status/:email
+ * @returns json data
+ */
+const getUserStatus = async (req, res) => {
+  try {
+    // console.log(req.params)
+    const userData = await Users.findOne({email:req.params.email})
+    .select({createdAt:0, updatedAt:0, __v:0, otp:0});
+    if (!userData) {
+      return res.status(400).json({
+        statusCode: 400,
+        statusValue: "FAIL",
+        message: "User not found!"
+      })
+    } 
+    return res.status(200).json({
+      statusCode: 200,
+      statusValue:"SUCCESS",
+      message:"Get user data successfully!",
       data:userData
     });
 
@@ -763,13 +845,13 @@ const getServiceEngList = async (req, res) => {
     const skip = page > 0 ? (page - 1) * limit : 0
     const getUsers = await User.find({userType:"Service-Engineer"})
     .select({ passwordHash: 0, __v: 0, createdAt: 0, updatedAt: 0, otp: 0 })
-    .sort({createdAt:-1})
+    .sort({userStatus:1})
     .skip(skip)
     .limit(limit);
 
     // Count 
     const count = await User.find({userType:"Service-Engineer"})
-    .sort({createdAt:-1})
+    .sort({userStatus:1})
     .countDocuments();
 
     if (getUsers.length>0) {
@@ -788,6 +870,54 @@ const getServiceEngList = async (req, res) => {
       statusValue: "FAIL",
       message: "Data not found.",
       data: []
+    })
+  } catch (err) {
+    return res.status(500).json({
+      statusCode: 500,
+      statusValue: "FAIL",
+      message: "Internal server error",
+      data: {
+        generatedTime: new Date(),
+        errMsg: err.stack,
+      }
+    })
+  }
+}
+/**
+ * @desc - change user status by userId
+ * @api - PUT /api/logger/change-userType/userId
+ * @returns json data
+ */
+const changeUserStatus = async (req, res) => {
+  try {
+    const schema = Joi.object({
+      userStatus: Joi.string().valid("Active", "Inactive").required(),
+      email: Joi.string().required(),
+    })
+    let result = schema.validate(req.body);
+    if (result.error) {
+      return res.status(400).json({
+        statusCode: 400,
+        statusValue: "FAIL",
+        message: result.error.details[0].message,
+      })
+    }
+    console.log(req.body)
+    const updateDoc = await Users.findOneAndUpdate({ email:req.body.email }, {
+      userStatus: req.body.userStatus
+    }, { new: true });
+    if (!updateDoc) {
+      return res.status(400).json({
+        statusCode: 400,
+        statusValue: "FAIL",
+        message: "data not update."
+      })
+    }
+    return res.status(200).json({
+      statusCode: 200,
+      statusValue: "SUCCESS",
+      message: "User status changed successfully.",
+      data: updateDoc
     })
   } catch (err) {
     return res.status(500).json({
@@ -964,4 +1094,6 @@ module.exports = {
   verifyOtp,
   generateNewPassword,
   getActivity,
+  changeUserStatus,
+  getUserStatus
 };

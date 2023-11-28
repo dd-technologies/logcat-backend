@@ -7,6 +7,8 @@ const Joi = require('joi');
 const Device = require('../model/RegisterDevice');
 const installationModel = require('../model/deviceInstallationModel');
 const aboutDeviceModel = require('../model/aboutDeviceModel');
+const RegisterDevice = require('../model/RegisterDevice');
+const registeredHospitalModel = require('../model/registeredHospitalModel.js');
 
 /**
  * 
@@ -206,6 +208,10 @@ const getProductionBySrNo = async (req, res) => {
         .select({ __v: 0, createdAt: 0, updatedAt: 0 })
         let desiredObj = {};
         const aboutData = await aboutDeviceModel.findOne({deviceId:data.deviceId});
+        // get deptname
+        const deviceData = await RegisterDevice.findOne({DeviceId:data.deviceId});
+        const hospitalData = await registeredHospitalModel.findOne({Hospital_Name:data.hospitalName})
+        console.log(hospitalData)
         desiredObj = {
             "deviceId": data ? data.deviceId : "",
             "purpose": data ? data.purpose : "",
@@ -216,11 +222,14 @@ const getProductionBySrNo = async (req, res) => {
             "manufacturingDate": data ? data.manufacturingDate : "",
             "dispatchDate": data ? data.dispatchDate : "",
             "hospitalName": data ? data.hospitalName : "",
+            "pincode":!!hospitalData ? hospitalData.Pincode : "",
             "dateOfWarranty": data ? data.dateOfWarranty : "",
             "address": data ? data.address : "",
             "hw_version": data ? data.hw_version : "",
             "sw_version:": data ? data.sw_version:  "",
             "concerned_p_contact":aboutData ? aboutData.phone_number : "",
+            "concerned_person":!!aboutData ? aboutData.concerned_person : "",
+            "department_name":!!deviceData ? deviceData.Department_Name : "",
         }
         if (!data) {
             return res.status(404).json({
