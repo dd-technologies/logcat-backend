@@ -27,6 +27,7 @@ const User = require('../model/users');
 const assignDeviceTouserModel = require('../model/assignedDeviceTouserModel');
 const JWTR = require("jwt-redis").default;
 const jwtr = new JWTR(redisClient);
+const {deviceIdArr} = require('../middleware/msgResponse');
 
 
 
@@ -1470,12 +1471,21 @@ const createTrends = async (req, res, next) => {
        pr:pr
     });
     const SaveTrends = await trends.save(trends);
+    // console.log(11,SaveTrends)
+    // console.log(22,req.body)
+
+    if(deviceIdArr.includes(SaveTrends.did)) {
+      console.log(true)
+      
+    }else{
+      deviceIdArr.push(SaveTrends.did)
+      
+    }
     if (SaveTrends) {
-      res.status(201).json({
+      return res.status(201).json({
         status: 1,
         data: { eventCounts: SaveTrends.length },
         message: 'Trends add!',
-
       });
     }
 

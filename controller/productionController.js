@@ -30,6 +30,8 @@ const createProduction = async (req, res) => {
             // dispatchDate: Joi.string().required(),
             hw_version: Joi.string().allow("").required(),
             sw_version: Joi.string().allow("").required(),
+            displayNumber: Joi.string().required(),
+            turbineNumber: Joi.string().required(),
         })
         let result = schema.validate(req.body);
         if (result.error) {
@@ -47,6 +49,7 @@ const createProduction = async (req, res) => {
         const getAddress = await aboutDeviceModel.findOne({deviceId:req.body.deviceId})
         // console.log(12,getAddress)
         // console.log(13,getWaranty)
+        // console.log(11,req.body)
         const productionData = await productionModel.findOneAndUpdate({deviceId:req.body.deviceId},
             {
                 deviceId:req.body.deviceId,
@@ -62,12 +65,23 @@ const createProduction = async (req, res) => {
                 address:!!getAddress? getAddress.address : "NA",
                 hw_version:req.body.hw_version,
                 sw_version:req.body.sw_version,
+                displayNumber:req.body.displayNumber,
+                turbineNumber:req.body.turbineNumber,
             },
             { upsert:true, new: true },
         );
-        // console.log(11,productionData)
+        
         // const saveDoc = await productionData.save();
         if (!productionData) {
+            await aboutDeviceModel.updateMany({deviceId:req.body.deviceId},{$set:{serial_no:req.body.serialNumber}})
+            return res.status(201).json({
+                statusCode: 201,
+                statusValue: "SUCCESS",
+                message: "Production data has been saved successfully.",
+                data: productionData
+            });
+        } else {
+            await aboutDeviceModel.updateMany({deviceId:req.body.deviceId},{$set:{serial_no:req.body.serialNumber}})
             return res.status(201).json({
                 statusCode: 201,
                 statusValue: "SUCCESS",
@@ -75,12 +89,7 @@ const createProduction = async (req, res) => {
                 data: productionData
             });
         }
-        return res.status(201).json({
-            statusCode: 201,
-            statusValue: "SUCCESS",
-            message: "Production data has been saved successfully.",
-            data: productionData
-        });
+        
     } catch (err) {
         return res.status(500).json({
             status: -1,
@@ -199,6 +208,38 @@ const getProductionById = async (req, res) => {
 */
 const getProductionBySrNo = async (req, res) => {
     try {
+        // check serial already used or not
+        const isSerialNo = await aboutDeviceModel.findOne({serial_no:req.params.serialNumber});
+        // console.log(isSerialNo)
+        const errors = validationResult(req);
+        // if(!!isSerialNo) {
+        //     return res.status(400).json({
+        //         statusCode: 400,
+        //         statusValue: "FAIL",
+        //         message: "This serial already in used.",
+        //     })
+        // }
+        if(!!isSerialNo) {
+            return res.status(400).json({
+              statusCode: 400,
+              statusValue:"FAIL",
+              message:"This Serial No. already in used.",
+              data: {
+                err: {
+                  generatedTime: new Date(),
+                  errMsg: errors
+                    .array()
+                    .map((err) => {
+                      return `${err.msg}: ${err.param}`;
+                    })
+                    .join(' | '),
+                  msg: 'This Serial No. already in used.',
+                  type: 'ValidationError',
+                  statusCode:400,
+                },
+              },
+            });
+        }
         const data = await productionModel.findOne({
             $or:[
                 {serialNumber:req.params.serialNumber},
@@ -206,12 +247,15 @@ const getProductionBySrNo = async (req, res) => {
             ]
         })
         .select({ __v: 0, createdAt: 0, updatedAt: 0 })
+        
+        // check data
+       
         let desiredObj = {};
         const aboutData = await aboutDeviceModel.findOne({deviceId:data.deviceId});
         // get deptname
         const deviceData = await RegisterDevice.findOne({DeviceId:data.deviceId});
         const hospitalData = await registeredHospitalModel.findOne({Hospital_Name:data.hospitalName})
-        console.log(hospitalData)
+        // console.log(hospitalData)
         desiredObj = {
             "deviceId": data ? data.deviceId : "",
             "purpose": data ? data.purpose : "",

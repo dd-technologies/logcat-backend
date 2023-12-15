@@ -222,7 +222,7 @@ const getHospitalList = async (req, res) => {
 
 const getHospitals = async (req, res) => {
     try {
-        const data = await registeredHospitalModel.find({Pincode:req.params.Pincode}, { __v: 0, createdAt: 0, updatedAt: 0 });
+        const data = await registeredHospitalModel.find({$or:[{Pincode:req.params.Pincode},{Hospital_Name:req.params.Hospital_Name}]}, { __v: 0, createdAt: 0, updatedAt: 0 });
         if (data.length == "") {
             return res.status(404).json({
                 statusCode: 404,
@@ -294,6 +294,7 @@ const getSingleHospital = async (req, res) => {
 const getCountryList = async (req, res) => {
     try {
         const countryData = await Country.getAllCountries();
+        // const getData = https://api.postalpincode.in/pincode/110001
         if (!countryData) {
             return res.status(400).json({
                 statusCode: 400,
@@ -320,6 +321,7 @@ const getCountryList = async (req, res) => {
         });
     }
 }
+
 
 const getStateListByCountryName = async (req, res) => {
     try {

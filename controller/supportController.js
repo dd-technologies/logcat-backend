@@ -38,7 +38,6 @@ const saveTicket = async (req, res) => {
             serialNumber: Joi.string().allow("").optional(),
             tag: Joi.string().optional(),
             address: Joi.string().optional(),
-            
         })
         let result = schema.validate(req.body);
         if (result.error) {
@@ -77,10 +76,10 @@ const saveTicket = async (req, res) => {
             priority:req.body.priority,
             details:req.body.details,
             waranty_status:req.body.waranty_status,
-            serialNumber:!!(req.body.serialNumber) ? req.body.serialNumber : "",
+            serialNumber:!!(req.body.serialNumber) ? req.body.serialNumber : "NA",
             tag:req.body.tag,
             address:!!(req.body.address) ? req.body.address : getAddress.address,
-            hospital_name:!!getHospital? getHospital.Hospital_Name : "",
+            hospital_name:!!getHospital? getHospital.Hospital_Name : "NA",
         });
         // console.log(11, ticketData)
         const saveDoc = await ticketData.save();
@@ -118,9 +117,9 @@ const saveTicket = async (req, res) => {
 const getAllTickets = async (req, res) => {
     try {
         // for search
-        var search = "";
-        if (req.query.search && req.query.search !== "undefined") {
-            search = req.query.search;
+        var filter = "";
+        if (req.query.filter && req.query.filter !== "undefined") {
+            filter = req.query.filter;
         }
 
         // Pagination
@@ -148,7 +147,7 @@ const getAllTickets = async (req, res) => {
         const data = await assignTicketModel.find({
             $and:[
                 filterObj,
-                { ticket_number:{ $regex: ".*" + search + ".*", $options: "i" } },
+                { status:{ $regex: ".*" + filter + ".*", $options: "i" } },
             ]
         })
         .sort({ createdAt: -1 })
@@ -159,7 +158,7 @@ const getAllTickets = async (req, res) => {
         const count = await assignTicketModel.find({
             filterObj,
             $or:[
-                { ticket_number:{ $regex: ".*" + search + ".*", $options: "i" } },
+                { status:{ $regex: ".*" + filter + ".*", $options: "i" } },
             ]
         })
         .sort({ createdAt: -1 })
@@ -318,6 +317,119 @@ const updateTicket = async (req, res) => {
             message: "Data not updated.",
             data: updateDoc
         });
+    } catch (err) {
+        return res.status(500).json({
+            statusCode: 500,
+            statusValue: "FAIL",
+            message: "Internal server error",
+            data: {
+                generatedTime: new Date(),
+                errMsg: err.stack,
+            }
+        })
+    }
+}
+
+
+/**
+* api      PUT @/support/update-ticket
+* desc     @updateTicket for logger access only
+*/
+// const reAssignTicket = async (req, res) => {
+//     try {
+//         const schema = Joi.object({
+//             id: Joi.string().required(),
+//             service_engineer: Joi.string().required(),
+//         })
+//         let result = schema.validate(req.body);
+//         if (result.error) {
+//             return res.status(200).json({
+//                 status: 0,
+//                 statusCode: 400,
+//                 message: result.error.details[0].message,
+//             })
+//         }
+//         const checkTicket = await assignTicketModel.findById({_id:req.body.id});
+//         if (checkTicket.ticket_status == "Close") {
+//             return res.status(400).json({
+//                     statusCode: 400,
+//                     statusValue: "FAIL",
+//                     message: "Error! You can't re-assigned closed tickets."
+//                 })
+//             }
+//         }
+//         const updateDoc = await assignTicketModel.findByIdAndUpdate(
+//             {_id:req.body.id}, 
+//             {service_engineer:req.body.service_engineer}, 
+//             { new: true });
+//         if (!!updateDoc) {
+//             return res.status(200).json({
+//                 statusCode: 200,
+//                 statusValue: "SUCCESS",
+//                 message: "Ticket re-assigned successfully.",
+//                 data: updateDoc,
+//             });
+//         }
+//         return res.status(400).json({
+//             statusCode: 400,
+//             statusValue: "FAIL",
+//             message: "Data not updated.",
+//             data: updateDoc
+//         });
+//     } catch(err) {
+//         return res.status(500).json({
+//             statusCode: 500,
+//             statusValue: "FAIL",
+//             message: "Internal server error",
+//             data: {
+//                 generatedTime: new Date(),
+//                 errMsg: err.stack,
+//             }
+//         })
+//     }
+// }
+
+
+/**
+* api      PUT @/support/re-assign-ticket
+* desc     @reAssignTicket for logger access only
+*/
+const reAssignTicket = async (req, res) => {
+    try {
+        const schema = Joi.object({
+            id: Joi.string().required(),
+            service_engineer: Joi.string().required(),
+        })
+        let result = schema.validate(req.body);
+        if (result.error) {
+            return res.status(400).json({
+                status: 0,
+                statusCode: 400,
+                message: result.error.details[0].message,
+            })
+        }
+        // console.log(req.body)
+        const checkTicket = await assignTicketModel.findById({_id:req.body.id});
+        if (checkTicket.ticket_status == "Close") {
+            return res.status(400).json({
+                statusCode: 400,
+                statusValue: "FAIL",
+                message: "Error! You can't re-assign closed tickets.",
+            })
+        }
+        const updateDoc = await assignTicketModel.findByIdAndUpdate(
+            {_id:req.body.id}, 
+            {service_engineer:req.body.service_engineer}, 
+            { new: true }
+        );
+        if (!!updateDoc) {
+            return res.status(200).json({
+                statusCode: 200,
+                statusValue: "SUCCESS",
+                message: "Ticket re-assigned successfully.",
+                data: updateDoc,
+            });
+        }
     } catch (err) {
         return res.status(500).json({
             statusCode: 500,
@@ -620,5 +732,6 @@ module.exports = {
     getConcernedPerson,
     submitFeedback,
     getIndividualTicket,
-    getTicketByTicketNumber
+    getTicketByTicketNumber,
+    reAssignTicket
 }

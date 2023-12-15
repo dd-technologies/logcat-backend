@@ -21,7 +21,9 @@ const {
     getActivity,
     deleteSingleUser,
     changeUserStatus,
-    getUserStatus
+    getUserStatus,
+    sendOtpSms,
+    verifyOtpSms
 } = require('../controller/users.js')
 
 const {
@@ -33,6 +35,9 @@ const { profileCache } = require("../middleware/cache.js");
 // Unprotected
 router.post('/auth/login', loginUser);
 router.post('/auth/register', registerUser);
+router.get('/send-otp-sms/:contactNumber', sendOtpSms);
+router.post('/verify-sms-otp', verifyOtpSms);
+
 // router.post("/auth/forget", body('email').notEmpty().isEmail(), userForgetPassword);
 
 // Token access

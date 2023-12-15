@@ -10,6 +10,7 @@ const verifyUserOrAdmin = require('../middleware/verifyUserOrAdmin');
 const mongoose = require('mongoose');
 
 const jwtr = new JWTR(redisClient);
+// console.log(11,redisClient)
 const Joi = require('joi');
 const User = require('../model/users');
 const sendEmail = require('../helper/sendEmail.js');
@@ -18,6 +19,9 @@ const errorHandler = require('../middleware/errorHandler.js');
 const {sendOtp} = require('../helper/sendOtp');
 const activityModel = require('../model/activityModel');
 const registeredHospitalModel = require('../model/registeredHospitalModel.js');
+const assignTicketModel = require('../model/assignTicketModel.js');
+const sendSms = require('../helper/sendSms.js');
+const otpVerificationModel = require('../model/otpVerificationModel.js');
 
 /**
  * api      POST @/api/logger/register
@@ -80,7 +84,7 @@ const registerUser = async (req, res) => {
     // Send the email
     // const emailSubject = "Welcome to our Logcat";
     // const emailText = "Please verify your email id";
-    // await sendEmail(insertData.email, emailSubject, emailText);
+    await sendEmail(insertData.email, emailSubject, emailText);
     // await sendInBlueEmail(insertData.email);
     if (saveDoc) {
       return res.status(201).json({
@@ -102,6 +106,152 @@ const registerUser = async (req, res) => {
     })
   }
 }
+
+/**
+* api      POST @/api/logger/verify-otp
+* desc     @verifyOtpSms for public route
+*/
+const sendOtpSms = async (req, res) => {
+  try {
+    const twilio = require('twilio');
+    const accountSid = 'ACc0e61f942e6af0e1f53875f469830ef9';
+    const authToken = '515f24ec71a18ccd103dbe7e1c33c4f3';
+
+    const twilioPhone = '+12057496028';
+    const contactNumber = `+91${req.params.contactNumber}`;
+    const client = new twilio(accountSid, authToken); 
+
+    var otp = Math.floor(1000 + Math.random() * 9000);
+
+    if(!!contactNumber) {
+      await otpVerificationModel.findOneAndUpdate(
+        {contactNumber:contactNumber},
+        {
+          contactNumber:contactNumber,
+          otp:otp,
+          isVerified:false,
+        },{upsert:true},
+      );
+      const sendSms = client.messages
+            .create({
+                body: `Hello, this is a test message from AgVa Healthcare! You One Time Verification Code is : ${otp}`,
+                from: twilioPhone,
+                to: contactNumber
+            })
+            .then(message => console.log(`Message sent with SID: ${message.sid}`))
+            .catch(error => console.error(`Error sending message: ${error.message}`));
+      if (sendSms) {
+        return res.status(200).json({
+          statusCode:201,
+          statusValue:"SUCCESS",
+          message:"Otp Send Successfully.",
+          otp:otp
+        })
+      }  
+      return res.status(400).json({
+        statusCode:400,
+        statusValue:"FAIL",
+        message:"Otp not sened.",
+      })   
+    }
+    
+  } catch (err) {
+    res.status(500).json({
+      statusCode: 500,
+      statusValue: "FAIL",
+      message: "Internal server error",
+      data: {
+        generatedTime: new Date(),
+        errMsg: err.stack,
+      }
+    })
+  }
+}
+
+
+/**
+* api      POST @/api/logger/verify-otp
+* desc     @verifyOtpSms for public route
+*/
+const verifyOtpSms = async (req, res) => {
+  try {
+    const schema = Joi.object({
+      otp: Joi.string().required(),
+    })
+    let result = schema.validate(req.body);
+    if (result.error) {
+      return res.status(400).json({
+        statusCode: 400,
+        statusValue: "FAIL",
+        message: result.error.details[0].message,
+      })
+    }
+    const checkOtp = await otpVerificationModel.findOne({ otp: req.body.otp });
+    const errors = validationResult(req);
+    
+    // console.log(11,checkOtp)
+    if (!checkOtp) {
+      return res.status(400).json({
+        statusCode: 400,
+        statusValue:"FAIL",
+        message:"You have entered wrong otp. Please enter valid OTP",
+        data: {
+          err: {
+            generatedTime: new Date(),
+            errMsg: errors
+              .array()
+              .map((err) => {
+                return `${err.msg}: ${err.param}`;})
+                .join(' | '),
+            msg: 'Wrong OTP',
+            type: 'ValidationError',
+            statusCode:400,
+          },
+        },
+      });
+      // console.log()
+    }
+    if (checkOtp.isVerified == true) {
+      return res.status(400).json({
+        statusCode: 400,
+        statusValue:"FAIL",
+        message:"Contact Number already verified.",
+        data: {
+          err: {
+            generatedTime: new Date(),
+            errMsg: errors
+              .array()
+              .map((err) => {
+                return `${err.msg}: ${err.param}`;})
+                .join(' | '),
+            msg: 'Contact Number already verified.',
+            type: 'ValidationError',
+            statusCode:400,
+          },
+        },
+      });
+      // console.log()
+    }
+    
+    await otpVerificationModel.findOneAndUpdate({otp:req.body.otp},{isVerified:true})
+    res.status(200).json({
+      statusCode: 200,
+      statusValue: "SUCCESS",
+      message: "Otp verified successfully."
+    })
+  } catch (err) {
+    return res.status(500).json({
+      statusCode: 500,
+      statusValue: "FAIL",
+      message: "Internal server error.",
+      data: {
+        generatedTime: new Date(),
+        errMsg: err.stack,
+      }
+    });
+  }
+}
+
 
 /**
  *
@@ -178,6 +328,7 @@ const loginUser = async (req, res) => {
     //   name:isUserExist._id
     // }
     // console.log(123, req.session.user);
+    // await sendSms();
     return res.status(200).json({
       statusCode: 200,
       statusValue:"SUCCESS",
@@ -843,7 +994,7 @@ const getServiceEngList = async (req, res) => {
       limit = 1000;
     }
     const skip = page > 0 ? (page - 1) * limit : 0
-    const getUsers = await User.find({userType:"Service-Engineer"})
+    const getUsers = await User.find({$and:[{userType:"Service-Engineer"},{userStatus:"Active"}]})
     .select({ passwordHash: 0, __v: 0, createdAt: 0, updatedAt: 0, otp: 0 })
     .sort({userStatus:1})
     .skip(skip)
@@ -883,6 +1034,8 @@ const getServiceEngList = async (req, res) => {
     })
   }
 }
+
+
 /**
  * @desc - change user status by userId
  * @api - PUT /api/logger/change-userType/userId
@@ -902,7 +1055,7 @@ const changeUserStatus = async (req, res) => {
         message: result.error.details[0].message,
       })
     }
-    console.log(req.body)
+    // console.log(req.body)
     const updateDoc = await Users.findOneAndUpdate({ email:req.body.email }, {
       userStatus: req.body.userStatus
     }, { new: true });
@@ -913,12 +1066,22 @@ const changeUserStatus = async (req, res) => {
         message: "data not update."
       })
     }
+    if (req.body.userStatus === "Inactive") {
+      await assignTicketModel.updateMany({service_engineer:req.body.email},{$set:{service_engineer:"--Not Avl--"}}) 
+      return res.status(200).json({
+        statusCode: 200,
+        statusValue: "SUCCESS",
+        message: "User status changed successfully.",
+        data: updateDoc
+      })
+    }
     return res.status(200).json({
       statusCode: 200,
       statusValue: "SUCCESS",
       message: "User status changed successfully.",
       data: updateDoc
     })
+    
   } catch (err) {
     return res.status(500).json({
       statusCode: 500,
@@ -1095,5 +1258,7 @@ module.exports = {
   generateNewPassword,
   getActivity,
   changeUserStatus,
-  getUserStatus
+  getUserStatus,
+  sendOtpSms,
+  verifyOtpSms
 };

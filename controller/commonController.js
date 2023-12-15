@@ -18,6 +18,8 @@ const errorHandler = require('../middleware/errorHandler.js');
 const {sendOtp} = require('../helper/sendOtp');
 const emailVerificationModel = require('../model/emailVerificationModel');
 var query = require('india-pincode-search');
+const aboutDeviceModel = require('../model/aboutDeviceModel.js');
+const productionModel = require('../model/productionModel.js');
 
 
 /**
@@ -204,9 +206,44 @@ const getCountryByPincode = async (req, res) => {
   }
 }
 
+/**
+* api      GET @/common/get-serial-number-list
+* desc     @getDeviceSerialNumber for public access
+*/
+const getDeviceSerialNumber = async (req, res) => {
+  try {
+    const getData = await productionModel.find({serialNumber:{$ne:null}},{serialNumber:1})
+    if (getData.length < 1) {
+      return res.status(400).json({
+        statusCode: 400,
+        statusValue: "FAIL",
+        message: "Opps something went wrong!",
+      })
+    }
+    return res.status(200).json({
+      statusCode: 200,
+      statusValue: "SUCCESS",
+      message: "Data get successfully.",
+      data:getData,
+    })
+    
+  } catch (err) {
+    return res.status(500).json({
+      statusCode: 500,
+      statusValue: "FAIL",
+      message: "Internal server error.",
+      data: {
+        generatedTime: new Date(),
+        errMsg: err.stack,
+      }
+    });
+  }
+}
+
 
 module.exports = {
     sendVerificationEmail,
     verifyOtp,
-    getCountryByPincode
+    getCountryByPincode,
+    getDeviceSerialNumber
 }

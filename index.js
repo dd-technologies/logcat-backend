@@ -10,7 +10,7 @@ const bodyParser = require("body-parser");
 const nodemailer = require("nodemailer");
 const http = require("http");
 var cookieParser = require('cookie-parser');
-
+const {deviceIdArr} = require('./middleware/msgResponse');
 
 // sendin blue
 const Sib = require("sib-api-v3-sdk");
@@ -35,7 +35,8 @@ const productionRouter = require("./route/productionRoute.js");
 const supportRouter = require("./route/supportRoute.js");
 var indexRouter = require('./route/index');
 const commonRouter = require("./route/commonRoute.js");
-
+// var redis = require("redis")
+// redisClient = redis.createClient();
 
 // creating connection with DB
 connectDB();
@@ -121,7 +122,8 @@ const io = new Server(server, {
 });
 
 // Global 
-var deviceIdArr = [];
+// var deviceIdArr = [];
+// console.log(11,globalArray)
 // Socket.IO connection hand
 io.on('connection', (socket) => {
   console.log('A user connected');
@@ -182,6 +184,29 @@ io.on('connection', (socket) => {
 });
 
 // Socket end
+
+// send sms api
+
+// const accountSid = 'ACc0e61f942e6af0e1f53875f469830ef9';
+// const authToken = '515f24ec71a18ccd103dbe7e1c33c4f3';
+// const twilioPhone = '+12057496028';
+// const recipientPhone = '+917701971457';
+
+// const twilio = require('twilio');
+// const clientt = new twilio(accountSid, authToken);
+
+// clientt.messages
+//     .create({
+//         body: 'Hello, this is a test message from Twilio!',
+//         from: twilioPhone,
+//         to: recipientPhone
+//     })
+//     .then(message => console.log(`Message sent with SID: ${message.sid}`))
+//     .catch(error => console.error(`Error sending message: ${error.message}`));
+
+
+
+// end sms
 
 server.listen(PORT, () =>
   logger.error(`Server is running on port : ${PORT}`)

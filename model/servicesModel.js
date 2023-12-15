@@ -24,6 +24,16 @@ const ServiceSchema = mongoose.Schema({
         type: String,
         default: ""
     },
+    name: {
+        type: String,
+        requirted: true,
+        default:"",
+    },
+    contactNo: {
+        type: String,
+        required: true,
+        default: "",
+    },
 },
     { timestamps: true })
 

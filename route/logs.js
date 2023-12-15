@@ -67,6 +67,10 @@ router.get('/services/:deviceId/:project_code', deviceController.getServicesById
 router.post('/status/:project_code', deviceController.saveStatus);
 router.get('/deviceOverview/:deviceId/:project_code', isAuth, deviceController.getDeviceOverviewById);
 router.post('/add-dispatch-details/:project_code', deviceController.addAboutDevice);
+router.put('/update-dispatch-data/:project_code', deviceController.updateAboutData);
+router.get('/track-dispatched-device-location/:deviceId', deviceController.trackDeviceLocation);
+
+
 router.get('/get-dispatch-data/:project_code', deviceController.getDispatchData);
 router.get('/get-dispatch-databyId/:deviceId', deviceController.getDispatchDataById);
 // router.put('/add-dispatch-details', deviceController.addDispatchDetails);

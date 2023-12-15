@@ -392,6 +392,8 @@ const addDeviceService = async (req, res) => {
       message: Joi.string().required(),
       date: Joi.string().required(),
       serialNo: Joi.string().allow("").optional(),
+      name: Joi.string().required(),
+      contactNo: Joi.string().required(),
     })
     let result = schema.validate(req.body);
     if (result.error) {
@@ -408,6 +410,8 @@ const addDeviceService = async (req, res) => {
       message:req.body.message,
       date:req.body.date,
       serialNo:otp,
+      name:req.body.name,
+      contactNo:req.body.contactNo,
     });
     const savedServices = await newServices.save();
     if (savedServices) {
@@ -657,7 +661,7 @@ const getDeviceOverviewById = async (req, res) => {
 const addAboutDevice = async (req, res) => {
   try {
     const schema = Joi.object({
-      deviceId: Joi.string().required(),
+      deviceId: Joi.string().allow("").optional(),
       product_type: Joi.string().required(),
       serial_no: Joi.string().required(),
       purpose: Joi.string().required(),
@@ -675,6 +679,7 @@ const addAboutDevice = async (req, res) => {
       state: Joi.string().allow("").required(),
       city: Joi.string().allow("").required(),
       district: Joi.string().allow("").required(),
+      document_no: Joi.string().allow("").optional(),
     });
     const result = schema.validate(req.body);
     if (result.error) {
@@ -685,7 +690,31 @@ const addAboutDevice = async (req, res) => {
       });
     }
     const project_code = req.query.project_code;
-    
+    // check already serial number exixts or not
+    const isSerialNo = await aboutDeviceModel.findOne({serial_no:req.body.serial_no});
+    const errors = validationResult(req);
+    if(!!isSerialNo) {
+      return res.status(400).json({
+        statusCode: 400,
+        statusValue:"FAIL",
+        message:"This Serial No. already in used.",
+        data: {
+          err: {
+            generatedTime: new Date(),
+            errMsg: errors
+              .array()
+              .map((err) => {
+                return `${err.msg}: ${err.param}`;
+              })
+              .join(' | '),
+            msg: 'This Serial No. already in used.',
+            type: 'ValidationError',
+            statusCode:400,
+          },
+        },
+      });
+    }
+
     // set date of warranty
     function addOneYear(date) {
       date.setFullYear(date.getFullYear() + 1);
@@ -696,16 +725,18 @@ const addAboutDevice = async (req, res) => {
     const cstr = date_of_warranty.toISOString()
     const finalDate = cstr.split("T")
     // console.log(11,nStr[0])
-    // get hospital
-    const getHospital = await Device.findOne({DeviceId:req.body.deviceId});
-    // console.log(11,getHospital)
+
     // get Production data
-    const getProduction = await productionModel.findOne({deviceId:req.body.deviceId});
+    const getProduction = await productionModel.findOne({$or:[{serialNumber:req.body.serial_no},{deviceId:req.body.deviceId}]});
     // console.log(22, getProduction)
+    // get hospital
+    const getHospital = await Device.findOne({$or:[{DeviceId:getProduction.deviceId},{DeviceId:req.body.deviceId}]});
+    // console.log(11,getHospital)
+    
     const saveDispatchData = await aboutDeviceModel.findOneAndUpdate(
-      { deviceId: req.body.deviceId },
+      { deviceId: getProduction.deviceId },
       {
-        deviceId:req.body.deviceId,
+        deviceId:!!getProduction? getProduction.deviceId : req.body.deviceId,
         product_type:!!getProduction? getProduction.productType : req.body.product_type,
         serial_no:!!getProduction? getProduction.serialNumber : req.body.serial_no,
         purpose:req.body.purpose,
@@ -724,6 +755,7 @@ const addAboutDevice = async (req, res) => {
         city:(!!req.body.city)? req.body.city : "NA",
         district:(!!req.body.district)? req.body.district : "NA",
         date_of_warranty:finalDate[0],
+        document_no:req.body.document_no,
       },
       { upsert: true }
     );
@@ -764,6 +796,89 @@ const addAboutDevice = async (req, res) => {
   }
 };
 
+// PUT - update dispatch data
+const updateAboutData = async (req, res) => {
+  try {
+    const schema = Joi.object({
+      deviceId: Joi.string().optional(),
+      serial_no: Joi.string().optional(),
+      hospital_name: Joi.string().optional(),
+      address: Joi.string().optional(),
+      document_no: Joi.string().optional(),
+      phone_number: Joi.string().optional(),
+      concerned_person: Joi.string().optional(),
+      date_of_dispatch: Joi.string().optional(),
+    });
+    const result = schema.validate(req.body);
+    if (result.error) {
+      return res.status(400).json({
+        statusCode: 400,
+        statusValue: "Validation Error",
+        message: result.error.details[0].message,
+      });
+    }
+    const project_code = req.query.project_code;
+    const getData = await aboutDeviceModel.find({$or:[{deviceId:req.body.deviceId},{serial_no:req.body.serial_no}]}).sort({createdAt:-1});
+    if (getData.length<1) {
+      return res.status(400).json({
+        statusCode: 400,
+        statusValue: "FAIL",
+        message: "Error!! Data not updated."
+      });
+    }
+    // console.log(req.body)
+    const saveDispatchData = new aboutDeviceModel(
+      {
+        deviceId:req.body.deviceId,
+        product_type:getData[0].product_type,
+        serial_no:getData[0].serial_no,
+        purpose:getData[0].purpose,
+        concerned_person:(!!req.body.concerned_person)? req.body.concerned_person : getData[0].concerned_person,
+        batch_no:getData[0].batch_no,
+        date_of_manufacturing:getData[0].date_of_manufacturing,
+        address:(!!req.body.address)? req.body.address : getData[0].address,
+        // date_of_dispatch:!!getData ? getData[0].date_of_dispatch : "NA",
+        date_of_dispatch:(!!req.body.date_of_dispatch)? req.body.date_of_dispatch : getData[0].date_of_dispatch,
+        hospital_name:(!!req.body.hospital_name)? req.body.hospital_name : getData[0].hospital_name,
+        phone_number:(!!req.body.phone_number)? req.body.phone_number : getData[0].phone_number,
+        sim_no:!!getData? getData[0].sim_no : "NA",
+        pincode:!!getData? getData[0].pincode : "NA",
+        distributor_name:!!getData? getData[0].distributor_name : "NA",
+        distributor_contact:!!getData? getData[0].distributor_contact : "NA",
+        state:!!getData? getData[0].state : "NA",
+        city:!!getData? getData[0].city : "NA",
+        district:!!getData? getData[0].district : "NA",
+        date_of_warranty:!!getData? getData[0].date_of_warranty : "NA",
+        document_no:(!!req.body.document_no)? req.body.document_no : getData[0].document_no,
+      },
+    )
+    const saveDoc = await saveDispatchData.save();
+    if (!saveDoc) {
+      return res.status(400).json({
+          statusCode: 400,
+          statusValue: "FAIL",
+          message: "Error!! Data not updated."
+      });
+  }
+  return res.status(200).json({
+    statusCode: 200,
+    statusValue: "SUCCESS",
+    message: "Dispatch Data updated successfully.",
+    data: saveDoc
+  });
+  } catch (err) {
+    return res.status(500).json({
+      statusCode: 500,
+      statusValue: "FAIL",
+      message: "Internal server error",
+      data: {
+        generatedTime: new Date(),
+        errMsg: err.stack,
+      },
+    });
+  }
+}
+
 
 const getDispatchData = async (req, res) => {
   try {
@@ -777,27 +892,63 @@ const getDispatchData = async (req, res) => {
     }
 
     const {project_code } = req.params;
-    const dispatchData = await aboutDeviceModel.find({ "product_type":{$ne:null} }, 
-      { "deviceId":1,
-      "batch_no":1,
-      "product_type":1,
-      "serial_no":1,
-      "purpose":1,
-      "concerned_person":1,
-      "date_of_manufacturing":1,
-      "address":1,
-      "date_of_dispatch":1,
-      "hospital_name":1,
-      "phone_number":1,
-      "sim_no":1,
-      "pincode":1,
-      "distributor_name":1,
-      "distributor_contact":1,
-      "state":1,
-      "city":1,
-      "district":1,
-      "date_of_warranty":1,
-    }).sort({updatedAt:-1});
+    let dispatchData = await aboutDeviceModel.aggregate(
+        [
+          {$match:{deviceId:{$ne:null}}},
+          {$group:{
+            _id:{
+              deviceId:'$deviceId',
+              // batch_no:'$batch_no',
+              // product_type:'$product_type',
+              // serial_no:'$serial_no',
+              // purpose:'$purpose',
+              // concerned_person:'$concerned_person',
+              // date_of_manufacturing:'$date_of_manufacturing',
+              // address:'$address',
+              // date_of_dispatch:'$date_of_dispatch',
+              // hospital_name:'$hospital_name',
+              // phone_number:'$phone_number',
+              // sim_no:'$sim_no',
+              // pincode:'$pincode',
+              // distributor_name:'$distributor_name',
+              // state:'$state',
+              // city:'$city',
+              // district:'$district',
+              // date_of_warranty:'$date_of_warranty',
+              // document_no:'$document_no',
+              // updatedAt:'$updatedAt',
+            },uniqueDocs:{$first:'$$ROOT'}}
+          },
+          { $replaceRoot: { newRoot: '$uniqueDocs' } },
+          {$sort:{createdAt:-1}},
+          {$project:{__v:0,createdAt:0,updatedAt:0}}
+        ]
+      );
+    // const dispatchData = await aboutDeviceModel.find({ "product_type":{$ne:null} }, 
+    //   { "deviceId":1,
+    //   "batch_no":1,
+    //   "product_type":1,
+    //   "serial_no":1,
+    //   "purpose":1,
+    //   "concerned_person":1,
+    //   "date_of_manufacturing":1,
+    //   "address":1,
+    //   "date_of_dispatch":1,
+    //   "hospital_name":1,
+    //   "phone_number":1,
+    //   "sim_no":1,
+    //   "pincode":1,
+    //   "distributor_name":1,
+    //   "distributor_contact":1,
+    //   "state":1,
+    //   "city":1,
+    //   "district":1,
+    //   "date_of_warranty":1,
+    //   "document_no":1,
+    // }).sort({updatedAt:-1});
+    
+    // for pagination purpose 
+    
     const paginateArray =  (dispatchData, page, limit) => {
       const skip = dispatchData.slice((page - 1) * limit, page * limit);
       return skip;
@@ -818,8 +969,39 @@ const getDispatchData = async (req, res) => {
       data: allData,
       totalDataCount: dispatchData.length,
       totalPages: Math.ceil( (dispatchData.length)/ limit),
-      currentPage: page
+      currentPage: page,
+      // data22:dispData
     });
+  } catch (err) {
+    res.status(500).json({
+      statusCode: 500,
+      statusValue: "FAIL",
+      message: "Internal server error",
+      data: {
+        generatedTime: new Date(),
+        errMsg: err.stack,
+      }
+    })
+  }
+}
+
+// get dispatched device location
+const trackDeviceLocation = async (req, res) => {
+  try {
+    const getData = await aboutDeviceModel.find({deviceId:req.params.deviceId});
+    if (getData.length<1) {
+      return res.status(404).json({
+        statusCode: 400,
+        statusValue: "FAIL",
+        message: "Data not found with this given deviceId."
+      });
+    }
+    return res.status(200).json({
+      statusCode: 200,
+      statusValue: "SUCCESS",
+      message: "Product dispatch details get successfully!",
+      data: getData,
+    })
   } catch (err) {
     res.status(500).json({
       statusCode: 500,
@@ -857,6 +1039,7 @@ const getDispatchDataById = async (req, res) => {
       "city":1,
       "district":1,
       "date_of_warranty":1,
+      "document_no":1,
     }).sort({updatedAt:-1}).limit(1);
     const servicesData = await servicesModel.find({ "deviceId":req.params.deviceId },
     {
@@ -1614,5 +1797,7 @@ module.exports = {
   getDevicesNeedingAttention,
   getDispatchData,
   getDispatchDataById,
-  getDevicesByHospital
+  getDevicesByHospital,
+  updateAboutData,
+  trackDeviceLocation
 }

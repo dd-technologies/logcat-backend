@@ -18,6 +18,8 @@ const productionSchema = new mongoose.Schema({
     address: { type: String, default: "" },
     hw_version: { type: String, default: "" },
     sw_version: { type: String, default: "" },
+    displayNumber: { type: String, default: "" },
+    turbineNumber: { type: String, default: "" },
 },
     { timestamps: true }
 );
